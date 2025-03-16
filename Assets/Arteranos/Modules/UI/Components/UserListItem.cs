@@ -19,6 +19,7 @@ using TMPro;
 using Arteranos.Services;
 using Ipfs;
 using UnityEngine.UI;
+using System.Text;
 
 namespace Arteranos.UI
 {
@@ -32,11 +33,15 @@ namespace Arteranos.UI
         private HoverButton btn_Block = null; // Block user
         private HoverButton btn_Unblock= null; // Unblock user
         private HoverButton btn_SendText= null; // Message user
+        private HoverButton btn_TravelTo=null; // Travel to specific user
 
         public UserID targetUserID = null;
 
         private IAvatarBrain Me = null;
         private Client cs = null;
+
+        private MultiHash server = null;
+        private int updateDelay = 0;
 
         public static UserListItem New(Transform parent, UserID targetUserID)
         {
@@ -56,12 +61,14 @@ namespace Arteranos.UI
             btn_Block= btns_ItemButton[2];
             btn_Unblock= btns_ItemButton[3];
             btn_SendText= btns_ItemButton[4];
+            btn_TravelTo = btns_ItemButton[5];
 
-            btn_AddFriend.onClick.AddListener(OnAddFriendButtonClicked);
-            btn_DelFriend.onClick.AddListener(OnDelFriendButtonClicked);
-            btn_Block.onClick.AddListener(OnBlockButtonClicked);
-            btn_Unblock.onClick.AddListener(OnUnblockButtonClicked);
-            btn_SendText.onClick.AddListener(OnSendTextButtonClicked);
+            btn_AddFriend.onClick.AddListener(GotAddFriendButtonClick);
+            btn_DelFriend.onClick.AddListener(GotDelFriendButtonClick);
+            btn_Block.onClick.AddListener(GotBlockButtonClick);
+            btn_Unblock.onClick.AddListener(GotUnblockButtonClick);
+            btn_SendText.onClick.AddListener(GotSendTextButtonClick);
+            btn_TravelTo.onClick.AddListener(GotTravelToClick);
 
             Me = G.Me;
             cs = G.Client;
@@ -71,12 +78,12 @@ namespace Arteranos.UI
         {
             base.Start();
 
-            lbl_caption.text = targetUserID;
+            UpdateCaption();
 
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
             Cid Icon;
 
-            if(targetUser == null)
+            if (targetUser == null)
             {
                 // Offline user, fetch icon from the social database
                 IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(targetUserID);
@@ -91,8 +98,37 @@ namespace Arteranos.UI
             img_Icon.Path = Icon;
         }
 
+        private void UpdateCaption()
+        {
+            StringBuilder sb = new();
+            sb.Append((string)targetUserID);
+
+            (MultiHash server, Cid world) = G.Community.FindFriend(HexString.Encode(targetUserID.Fingerprint));
+            if (server != null)
+            {
+                ServerInfo si = new(server);
+                string servername = si.Name ?? "Unknown server";
+                string worldname = si.CurrentWorldName ?? "Unknown world";
+                sb.Append($"\n{servername}");
+
+                if (world != null)
+                {
+                    sb.Append($" ({worldname})");
+                }
+            }
+
+            lbl_caption.text = sb.ToString();
+            this.server = server;
+
+            // Spread spectrum, avoid peaks.
+            updateDelay = UnityEngine.Random.Range(55, 70);
+        }
+
         private void Update()
         {
+            if (--updateDelay >= 0)
+                UpdateCaption();
+
             // When it's hovered, watch for the status updates - both internal and external causes.
             if (go_Overlay.activeSelf)
             {
@@ -117,11 +153,13 @@ namespace Arteranos.UI
                     btn_SendText.gameObject.SetActive(Utils.IsAbleTo(UserCapabilities.CanSendText, targetUser));
                 else
                     btn_SendText.gameObject.SetActive(false);
+
+                btn_TravelTo.gameObject.SetActive(server != null);
             }
         }
 
 
-        private void OnAddFriendButtonClicked()
+        private void GotAddFriendButtonClick()
         {
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
             if(targetUser != null)
@@ -138,7 +176,7 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnDelFriendButtonClicked()
+        private void GotDelFriendButtonClick()
         {
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
             if(targetUser != null)
@@ -155,7 +193,7 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnBlockButtonClicked()
+        private void GotBlockButtonClick()
         {
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
             if(targetUser != null)
@@ -172,7 +210,7 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnUnblockButtonClicked()
+        private void GotUnblockButtonClick()
         {
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
             if(targetUser != null)
@@ -188,7 +226,7 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnSendTextButtonClicked()
+        private void GotSendTextButtonClick()
         {
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
             if (targetUser == null)
@@ -201,6 +239,16 @@ namespace Arteranos.UI
 
             G.SysMenu.CloseSysMenus();
             Factory.NewTextMessage(targetUser);
+        }
+
+        private void GotTravelToClick()
+        {
+            btn_TravelTo.interactable = false;
+            // NOTE: Initiating transition, needs to be unhooked from the server list item, which will vanish!
+            TaskScheduler.ScheduleCoroutine(() => G.ConnectionManager.ConnectToServer(server, null));
+
+            // Can be removed because of the TOS afreement window, ot other things.
+            if (btn_TravelTo != null) btn_TravelTo.interactable = true;
         }
     }
 }

@@ -1,3 +1,9 @@
+# Version 2.9.2
+
+## Fixes and improvements
+
+- Join Friend: Visible friends get a "Travel To" button in their list entry line.
+
 # Version 2.9.1
 
 ## Fixes and improvements

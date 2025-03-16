@@ -21,6 +21,8 @@ namespace Arteranos.UI
     {
         public RectTransform lvc_UserList;
 
+        public virtual bool LocationVisible => false;
+
         protected Client cs = null;
 
         protected override void OnEnable()
@@ -32,7 +34,7 @@ namespace Arteranos.UI
             if(cs == null) return;
 
             foreach(KeyValuePair<UserID, UserSocialEntryJSON> entry in GetSocialListTab())
-                UserListItem.New(lvc_UserList.transform, entry.Key);
+                UserListItem.New(lvc_UserList.transform, entry.Key, LocationVisible);
         }
 
         protected override void OnDisable()

@@ -28,6 +28,9 @@ namespace Arteranos.UI
         [SerializeField] private TMP_Text lbl_caption = null;
         [SerializeField] private IPFSImage img_Icon = null;
 
+        public UserID TargetUserID { get; set; } = null;
+        public bool LocationVisible { get; set; } = false;
+
         private HoverButton btn_AddFriend = null; // Offering Friend or accepting the request
         private HoverButton btn_DelFriend = null; // Revoking Friend offer or unfriend
         private HoverButton btn_Block = null; // Block user
@@ -35,7 +38,6 @@ namespace Arteranos.UI
         private HoverButton btn_SendText= null; // Message user
         private HoverButton btn_TravelTo=null; // Travel to specific user
 
-        public UserID targetUserID = null;
 
         private IAvatarBrain Me = null;
         private Client cs = null;
@@ -43,12 +45,13 @@ namespace Arteranos.UI
         private MultiHash server = null;
         private int updateDelay = 0;
 
-        public static UserListItem New(Transform parent, UserID targetUserID)
+        public static UserListItem New(Transform parent, UserID targetUserID, bool locationVisible)
         {
             GameObject go = Instantiate(BP.I.UIComponents.UserListItem);
             go.transform.SetParent(parent, false);
             UserListItem UserListItem = go.GetComponent<UserListItem>();
-            UserListItem.targetUserID = targetUserID;
+            UserListItem.TargetUserID = targetUserID;
+            UserListItem.LocationVisible = locationVisible;
             return UserListItem;
         }
 
@@ -80,13 +83,13 @@ namespace Arteranos.UI
 
             UpdateCaption();
 
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             Cid Icon;
 
             if (targetUser == null)
             {
                 // Offline user, fetch icon from the social database
-                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(targetUserID);
+                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(TargetUserID);
                 Icon = q.Any() ? q.First().Value.Icon : null;
             }
             else
@@ -101,10 +104,10 @@ namespace Arteranos.UI
         private void UpdateCaption()
         {
             StringBuilder sb = new();
-            sb.Append((string)targetUserID);
+            sb.Append((string)TargetUserID);
 
-            (MultiHash server, Cid world) = G.Community.FindFriend(HexString.Encode(targetUserID.Fingerprint));
-            if (server != null)
+            (MultiHash server, Cid world) = G.Community.FindFriend(HexString.Encode(TargetUserID.Fingerprint));
+            if (server != null && LocationVisible)
             {
                 ServerInfo si = new(server);
                 string servername = si.Name ?? "Unknown server";
@@ -118,7 +121,7 @@ namespace Arteranos.UI
             }
 
             lbl_caption.text = sb.ToString();
-            this.server = server;
+            this.server = LocationVisible ? server : null;
 
             // Spread spectrum, avoid peaks.
             updateDelay = UnityEngine.Random.Range(55, 70);
@@ -132,9 +135,9 @@ namespace Arteranos.UI
             // When it's hovered, watch for the status updates - both internal and external causes.
             if (go_Overlay.activeSelf)
             {
-                IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+                IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
 
-                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(targetUserID);
+                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(TargetUserID);
                 
                 ulong currentState = q.Any() ? q.First().Value.State : SocialState.None;
 
@@ -161,14 +164,14 @@ namespace Arteranos.UI
 
         private void GotAddFriendButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.OfferFriendship(targetUser, true);
                 return;
             }
 
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetFriendState(ref state, true);
@@ -178,14 +181,14 @@ namespace Arteranos.UI
 
         private void GotDelFriendButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.OfferFriendship(targetUser, false);
                 return;
             }
 
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetFriendState(ref state, false);
@@ -195,14 +198,14 @@ namespace Arteranos.UI
 
         private void GotBlockButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.BlockUser(targetUser, true);
                 return;
             }
 
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetBlockState(ref state, true);
@@ -212,13 +215,13 @@ namespace Arteranos.UI
 
         private void GotUnblockButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.BlockUser(targetUser, false);
                 return;
             }
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetBlockState(ref state, false);
@@ -228,7 +231,7 @@ namespace Arteranos.UI
 
         private void GotSendTextButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if (targetUser == null)
             {
                 IDialogUI dialog = Factory.NewDialog();

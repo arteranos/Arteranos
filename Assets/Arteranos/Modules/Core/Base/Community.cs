@@ -46,7 +46,7 @@ namespace Arteranos.Core
                     select entry.Key;
         }
 
-        public MultiHash FindFriend(string friendFP)
+        public (MultiHash server, Cid world) FindFriend(string friendFP)
         {
             // Lazy server still lists your friend who just switched servers
             IEnumerable<(MultiHash peer, DateTime time)> q = from entry in UsersHosts
@@ -63,7 +63,9 @@ namespace Arteranos.Core
                     foundTime = time;
                 }
 
-            return found;
+            return found != null
+                ? (found, WorldHosts.ContainsKey(found) ? WorldHosts[found] : null)
+                : (null, null);
         }
 
         public IEnumerable<UserID> FindFriends(MultiHash peerID)

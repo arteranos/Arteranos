@@ -14,6 +14,8 @@ namespace Arteranos.UI
 {
     public class UserPanel_Friends : UserPanelBase
     {
+        public override bool LocationVisible => true;
+
         public override IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> GetSocialListTab()
         {
             IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> list = cs.GetSocialList(null, IsFriends);

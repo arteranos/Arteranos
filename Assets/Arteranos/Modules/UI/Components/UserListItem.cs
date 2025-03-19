@@ -19,6 +19,7 @@ using TMPro;
 using Arteranos.Services;
 using Ipfs;
 using UnityEngine.UI;
+using System.Text;
 
 namespace Arteranos.UI
 {
@@ -27,23 +28,30 @@ namespace Arteranos.UI
         [SerializeField] private TMP_Text lbl_caption = null;
         [SerializeField] private IPFSImage img_Icon = null;
 
+        public UserID TargetUserID { get; set; } = null;
+        public bool LocationVisible { get; set; } = false;
+
         private HoverButton btn_AddFriend = null; // Offering Friend or accepting the request
         private HoverButton btn_DelFriend = null; // Revoking Friend offer or unfriend
         private HoverButton btn_Block = null; // Block user
         private HoverButton btn_Unblock= null; // Unblock user
         private HoverButton btn_SendText= null; // Message user
+        private HoverButton btn_TravelTo=null; // Travel to specific user
 
-        public UserID targetUserID = null;
 
         private IAvatarBrain Me = null;
         private Client cs = null;
 
-        public static UserListItem New(Transform parent, UserID targetUserID)
+        private MultiHash server = null;
+        private int updateDelay = 0;
+
+        public static UserListItem New(Transform parent, UserID targetUserID, bool locationVisible)
         {
             GameObject go = Instantiate(BP.I.UIComponents.UserListItem);
             go.transform.SetParent(parent, false);
             UserListItem UserListItem = go.GetComponent<UserListItem>();
-            UserListItem.targetUserID = targetUserID;
+            UserListItem.TargetUserID = targetUserID;
+            UserListItem.LocationVisible = locationVisible;
             return UserListItem;
         }
 
@@ -56,12 +64,14 @@ namespace Arteranos.UI
             btn_Block= btns_ItemButton[2];
             btn_Unblock= btns_ItemButton[3];
             btn_SendText= btns_ItemButton[4];
+            btn_TravelTo = btns_ItemButton[5];
 
-            btn_AddFriend.onClick.AddListener(OnAddFriendButtonClicked);
-            btn_DelFriend.onClick.AddListener(OnDelFriendButtonClicked);
-            btn_Block.onClick.AddListener(OnBlockButtonClicked);
-            btn_Unblock.onClick.AddListener(OnUnblockButtonClicked);
-            btn_SendText.onClick.AddListener(OnSendTextButtonClicked);
+            btn_AddFriend.onClick.AddListener(GotAddFriendButtonClick);
+            btn_DelFriend.onClick.AddListener(GotDelFriendButtonClick);
+            btn_Block.onClick.AddListener(GotBlockButtonClick);
+            btn_Unblock.onClick.AddListener(GotUnblockButtonClick);
+            btn_SendText.onClick.AddListener(GotSendTextButtonClick);
+            btn_TravelTo.onClick.AddListener(GotTravelToClick);
 
             Me = G.Me;
             cs = G.Client;
@@ -71,15 +81,15 @@ namespace Arteranos.UI
         {
             base.Start();
 
-            lbl_caption.text = targetUserID;
+            UpdateCaption();
 
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             Cid Icon;
 
-            if(targetUser == null)
+            if (targetUser == null)
             {
                 // Offline user, fetch icon from the social database
-                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(targetUserID);
+                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(TargetUserID);
                 Icon = q.Any() ? q.First().Value.Icon : null;
             }
             else
@@ -91,14 +101,43 @@ namespace Arteranos.UI
             img_Icon.Path = Icon;
         }
 
+        private void UpdateCaption()
+        {
+            StringBuilder sb = new();
+            sb.Append((string)TargetUserID);
+
+            (MultiHash server, Cid world) = G.Community.FindFriend(HexString.Encode(TargetUserID.Fingerprint));
+            if (server != null && LocationVisible)
+            {
+                ServerInfo si = new(server);
+                string servername = si.Name ?? "Unknown server";
+                string worldname = si.CurrentWorldName ?? "Unknown world";
+                sb.Append($"\n{servername}");
+
+                if (world != null)
+                {
+                    sb.Append($" ({worldname})");
+                }
+            }
+
+            lbl_caption.text = sb.ToString();
+            this.server = LocationVisible ? server : null;
+
+            // Spread spectrum, avoid peaks.
+            updateDelay = UnityEngine.Random.Range(55, 70);
+        }
+
         private void Update()
         {
+            if (--updateDelay >= 0)
+                UpdateCaption();
+
             // When it's hovered, watch for the status updates - both internal and external causes.
             if (go_Overlay.activeSelf)
             {
-                IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+                IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
 
-                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(targetUserID);
+                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(TargetUserID);
                 
                 ulong currentState = q.Any() ? q.First().Value.State : SocialState.None;
 
@@ -117,20 +156,22 @@ namespace Arteranos.UI
                     btn_SendText.gameObject.SetActive(Utils.IsAbleTo(UserCapabilities.CanSendText, targetUser));
                 else
                     btn_SendText.gameObject.SetActive(false);
+
+                btn_TravelTo.gameObject.SetActive(server != null);
             }
         }
 
 
-        private void OnAddFriendButtonClicked()
+        private void GotAddFriendButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.OfferFriendship(targetUser, true);
                 return;
             }
 
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetFriendState(ref state, true);
@@ -138,16 +179,16 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnDelFriendButtonClicked()
+        private void GotDelFriendButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.OfferFriendship(targetUser, false);
                 return;
             }
 
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetFriendState(ref state, false);
@@ -155,16 +196,16 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnBlockButtonClicked()
+        private void GotBlockButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.BlockUser(targetUser, true);
                 return;
             }
 
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetBlockState(ref state, true);
@@ -172,15 +213,15 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnUnblockButtonClicked()
+        private void GotUnblockButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if(targetUser != null)
             {
                 Me.BlockUser(targetUser, false);
                 return;
             }
-            cs.UpdateSocialListEntry(targetUserID, (x) =>
+            cs.UpdateSocialListEntry(TargetUserID, (x) =>
             {
                 ulong state = x;
                 SocialState.SetBlockState(ref state, false);
@@ -188,9 +229,9 @@ namespace Arteranos.UI
             });
         }
 
-        private void OnSendTextButtonClicked()
+        private void GotSendTextButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(targetUserID);
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
             if (targetUser == null)
             {
                 IDialogUI dialog = Factory.NewDialog();
@@ -201,6 +242,16 @@ namespace Arteranos.UI
 
             G.SysMenu.CloseSysMenus();
             Factory.NewTextMessage(targetUser);
+        }
+
+        private void GotTravelToClick()
+        {
+            btn_TravelTo.interactable = false;
+            // NOTE: Initiating transition, needs to be unhooked from the server list item, which will vanish!
+            TaskScheduler.ScheduleCoroutine(() => G.ConnectionManager.ConnectToServer(server, null));
+
+            // Can be removed because of the TOS afreement window, ot other things.
+            if (btn_TravelTo != null) btn_TravelTo.interactable = true;
         }
     }
 }

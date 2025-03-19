@@ -9,10 +9,7 @@
         "Arteranos.Core",
         "Arteranos.UI",
         "Arteranos.WorldEdit",
-        "ipfs.Cryptography",
-        "ipfs.Http",
-        "ipfs.Core",
-        "ipfs.HttpEx",
+        "Ipfs",
         "ipfs.Unity",
         "Unity.TextMeshPro"
     ],

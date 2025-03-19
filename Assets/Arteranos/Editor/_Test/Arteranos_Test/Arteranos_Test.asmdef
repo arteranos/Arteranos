@@ -6,7 +6,7 @@
         "UnityEditor.TestRunner",
         "Arteranos.Core",
         "Arteranos.Services",
-        "ipfs.Cryptography"
+        "Ipfs"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,8 +19,7 @@
         "Newtonsoft.Json.dll",
         "Google.Protobuf.dll",
         "protobuf-net.dll",
-        "BouncyCastle.Crypto.dll",
-        "IpfsShipyard.Ipfs.Core.dll"
+        "BouncyCastle.Crypto.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [

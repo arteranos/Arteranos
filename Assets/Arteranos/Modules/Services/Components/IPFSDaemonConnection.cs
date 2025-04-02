@@ -45,93 +45,8 @@ namespace Arteranos.Services
         public static SignKey ServerKeyPair { get; private set; } = null;
         public static string RepoDir { get; private set; } = null;
 
-        private static string _IPFSExe = null;
-        private static bool? _IPFSAccessible = null;
         private static bool? _RepoExists = null;
-        private static bool? _DaemonRunning = null;
         private static int? APIPort = null;
-
-        private static ProcessStartInfo BuildDaemonCommand(string arguments, bool includeDefaultOptions = true)
-        {
-            List<string> sb = new();
-
-            if (includeDefaultOptions)
-            {
-                // Just set up the suitable RepoDir, don't care if it actually exists or not.
-                CheckRepository(false);
-
-                sb.Add($"--repo-dir={RepoDir}");
-            }
-
-            if (arguments != null)
-                sb.Add(arguments);
-
-            string argLine = string.Join(' ', sb);
-
-            return new()
-            {
-                FileName = _IPFSExe,
-                Arguments = argLine,
-                UseShellExecute = false,
-                RedirectStandardError = false,
-                RedirectStandardInput = false,
-                RedirectStandardOutput = false,
-                CreateNoWindow = true,
-            };
-        }
-
-        private static Status RunDaemonCommand(ProcessStartInfo psi, bool synced)
-        {
-            if(IPFSAccessible() != Status.OK) return IPFSAccessible();
-
-            try
-            {
-                Process process = Process.Start(psi);
-
-                if(synced) process.WaitForExit();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-                return Status.CommandFailed;
-            }
-
-            return Status.OK;
-        }
-
-        public static Status RunDaemonCommand(string arguments, bool synced)
-        {
-            ProcessStartInfo psi = BuildDaemonCommand(arguments);
-            return RunDaemonCommand(psi, synced);
-        }
-
-        public static Status IPFSAccessible()
-        {
-            // Got it earlier?
-            if (_IPFSAccessible != null) 
-                return _IPFSAccessible.Value ? Status.OK : Status.NoDaemonExecutable;
-
-            _IPFSExe = SystemInfo.operatingSystemFamily == OperatingSystemFamily.Windows ? "ipfs.exe" : "ipfs";
-
-            _IPFSExe = $"{CommandLine.ProgDir}/{_IPFSExe}";
-
-            Debug.Log($"Probing for viable IPFS backend executable ({_IPFSExe})");
-            // Just try 'ipfs.exe help'
-            ProcessStartInfo psi = BuildDaemonCommand("help", false);
-
-            try
-            {
-                Process process = Process.Start(psi);
-
-                _IPFSAccessible = true;
-                return Status.OK;
-            }
-            catch
-            {
-                _IPFSAccessible = false;
-                return Status.NoDaemonExecutable;
-            }
-        }
 
         public static Status CheckRepository(bool reinitAllowed)
         {
@@ -142,49 +57,24 @@ namespace Arteranos.Services
             try
             {
                 _ = IpfsClientEx.ReadDaemonPrivateKey(RepoDir);
-
-                _RepoExists = true;
-                return Status.OK;
             }
             catch
             {
-                if(!reinitAllowed)
-                {
-                    // Just checking, and it isn't there. So, stop right now.
-                    _RepoExists = false;
-                    return Status.NoRepository;
-                }
-            }
-
-            ProcessStartInfo psi = BuildDaemonCommand("init");
-            if(RunDaemonCommand(psi, true) != Status.OK)
-            {
-                // Init failed!
                 _RepoExists = false;
                 return Status.NoRepository;
             }
 
-            // Daemon says we're successful, but we have to verify.
-            _RepoExists = null;
-            return CheckRepository(false);
-        }
-
-        public static Status StartDaemon(bool forceRestart)
-        {
-            if (_DaemonRunning ?? false && !forceRestart) return Status.OK;
-            if (forceRestart) StopDaemon();
-
-            ProcessStartInfo psi = BuildDaemonCommand("daemon --enable-pubsub-experiment");
-            Status res = RunDaemonCommand(psi, false);
-            _DaemonRunning = res == Status.OK;
-            return res;
+            _RepoExists = true;
+            return Status.OK;
         }
 
         public static Status StopDaemon()
         {
-            ProcessStartInfo psi = BuildDaemonCommand("shutdown");
-            _DaemonRunning = null;
-            return RunDaemonCommand(psi, true);
+            Task.Run(async () =>
+            {
+                await Ipfs.ShutdownAsync();
+            });
+            return Status.OK;
         }
 
         public static int GetAPIPort()
@@ -255,58 +145,6 @@ namespace Arteranos.Services
             }
 
             return Status.OK;
-        }
-
-        public static async Task<Status> EvadePortSquatters()
-        {
-            Status result;
-
-            // Early exit if everything is not a port squatter
-            result = await CheckAPIConnection(5, true);
-            if (result != Status.PortSquatter) return result;
-
-            Debug.Log($"API port squatting detected");
-
-            int apiPort = NetworkStatus.GetAvailablePort(5001, 49162, bannedAPIPorts, true);
-            bannedAPIPorts.Add(apiPort);
-            int ipfsPort = NetworkStatus.GetAvailablePort(4001, 49152, bannedAPIPorts, true);
-            bannedAPIPorts.Add(ipfsPort);
-
-            // Port exhaustion.
-            if (apiPort == 0 || ipfsPort == 0) return Status.PortSquatter;
-
-            // Stop daemon and invalidate current port number
-            StopDaemon();
-            APIPort = null;
-            await Task.Delay(5000);
-
-            Debug.Log($"New port allocations: API={apiPort}, IPFS={ipfsPort}");
-
-            // Reconfigure API port
-            ProcessStartInfo psi = BuildDaemonCommand($"config Addresses.API /ip4/127.0.0.1/tcp/{apiPort}");
-            _ = RunDaemonCommand(psi, true);
-
-            // Reconfigure IPFS port
-            psi = BuildDaemonCommand($"config --json Addresses.Swarm " +
-                $"\"[ " +
-                $"  \\\"/ip4/0.0.0.0/tcp/{ipfsPort}\\\", " +
-                $"  \\\"/ip6/::/tcp/{ipfsPort}\\\", " +
-                $"  \\\"/ip4/0.0.0.0/udp/{ipfsPort}/quic-v1\\\", " +
-                $"  \\\"/ip4/0.0.0.0/udp/{ipfsPort}/quic-v1/webtransport\\\", " +
-                $"  \\\"/ip6/::/udp/{ipfsPort}/quic-v1\\\", " +
-                $"  \\\"/ip6/::/udp/{ipfsPort}/quic-v1/webtransport\\\" " +
-                $"]\"");
-            _ = RunDaemonCommand(psi, true);
-
-
-            // Additionally, remove the Web Gateway port.
-            psi = BuildDaemonCommand("config --json Addresses.Gateway []");
-            _ = RunDaemonCommand(psi, true);
-
-            // Start the daemon anew, and see if we're okay.
-            StartDaemon(false);
-            await Task.Delay(5000);
-            return await CheckAPIConnection(5, true);
         }
     }
 }

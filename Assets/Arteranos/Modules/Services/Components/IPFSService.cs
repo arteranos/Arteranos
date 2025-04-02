@@ -23,7 +23,6 @@ using Ipfs.Http;
 using System.Text;
 using IPAddress = System.Net.IPAddress;
 using Arteranos.Core.Operations;
-using TaskScheduler = Arteranos.Core.TaskScheduler;
 using Ipfs.CoreApi;
 using Debug = UnityEngine.Debug;
 using System.Collections.Concurrent;
@@ -45,10 +44,7 @@ namespace Arteranos.Services
         public static string CachedPTOSNotice { get; private set; } = null;
 
         private const string ANNOUNCERTOPIC = "/X-Arteranos";
-        private readonly List<string> ARTERANOSBOOTSTRAP = new() 
-        { 
-            "/dns4/prime.arteranos.ddnss.eu/tcp/4001/p2p/12D3KooWA1qSpKLjHqWemSW1gU5wJQdP8piBbDSQi6EEgqPVVkyc" 
-        };
+
         private const string PATH_USER_PRIVACY_NOTICE = "Privacy_TOS_Notice.md";
 
         private bool ForceIPFSShutdown = true;
@@ -75,57 +71,6 @@ namespace Arteranos.Services
             {
                 IEnumerator EnsureIPFSStarted()
                 {
-                    IEnumerator StartupIPFSExeCoroutine()
-                    {
-                        IPFSDaemonConnection.Status res = IPFSDaemonConnection.CheckRepository(false);
-
-                        if (res != IPFSDaemonConnection.Status.OK)
-                        {
-                            G.TransitionProgress?.OnProgressChanged(0.15f, "Initializing IPFS repository");
-                            res = IPFSDaemonConnection.CheckRepository(true);
-                        }
-
-                        if (res != IPFSDaemonConnection.Status.OK)
-                        {
-                            G.TransitionProgress?.OnProgressChanged(0.00f, "FAILED IPFS REPO INIT");
-                            Debug.LogError(@"
-**************************************************************************
-* !!! Failed to initialize the IPFS repository                       !!! *
-* Possible causes are....                                                *
-*  * Corrupted user data                                                 *
-*  * Corrupted program installation                                      *
-**************************************************************************
-");
-                            yield return new WaitForSeconds(10);
-                            SettingsManager.Quit();
-                            yield break;
-                        }
-
-                        G.TransitionProgress?.OnProgressChanged(0.19f, "Setting bootstrap");
-
-                        foreach (string entry in ARTERANOSBOOTSTRAP)
-                            res = IPFSDaemonConnection.RunDaemonCommand($"bootstrap add {entry}", true);
-
-                        G.TransitionProgress?.OnProgressChanged(0.20f, "Starting IPFS backend");
-
-                        res = IPFSDaemonConnection.StartDaemon(false);
-
-                        if (res != IPFSDaemonConnection.Status.OK)
-                        {
-                            G.TransitionProgress?.OnProgressChanged(0.00f, "FAILED TO START DAEMON");
-                            Debug.LogError(@"
-**************************************************************************
-* !!! Failed to start the IPFS daemon                                !!! *
-* Possible causes are....                                                *
-*  * Corrupted program installation                                      *
-**************************************************************************
-");
-                            yield return new WaitForSeconds(10);
-                            SettingsManager.Quit();
-                            yield break;
-                        }
-                    }
-
                     IPFSDaemonConnection.Status res = IPFSDaemonConnection.Status.CommandFailed;
 
                     int port = IPFSDaemonConnection.GetAPIPort();
@@ -133,14 +78,23 @@ namespace Arteranos.Services
                     if (port >= 0)
                     {
                         Debug.Log($"Present configuration says API port {port}");
-                        yield return Asyncs.Async2Coroutine(() => IPFSDaemonConnection.CheckAPIConnection(1, false), _res => res = _res);
+                        yield return Asyncs.Async2Coroutine(() => IPFSDaemonConnection.CheckAPIConnection(1), _res => res = _res);
                     }
-                    else
-                        Debug.Log("No configuration present, starting from scratch.");
 
-                    if (res != IPFSDaemonConnection.Status.OK)
+                    if (port == 0 || res != IPFSDaemonConnection.Status.OK)
                     {
-                        yield return StartupIPFSExeCoroutine();
+                        G.TransitionProgress?.OnProgressChanged(0.00f, "NO IPFS INSTANCE");
+                        Debug.LogError(@"
+**************************************************************************
+* !!! Failed to check IPFS instance                                  !!! *
+* Possible causes are....                                                *
+*  * Corrupted user data                                                 *
+*  * Corrupted program installation                                      *
+**************************************************************************
+");
+                        yield return new WaitForSeconds(10);
+                        SettingsManager.Quit();
+                        yield break;
                     }
                 }
 
@@ -153,8 +107,6 @@ namespace Arteranos.Services
                     Debug.LogError("Internal error: Missing version information - use Arteranos->Build->Update version");
                     Debug.LogException(ex);
                 }
-
-                IPFSDaemonConnection.IPFSAccessible();
 
                 // Find and start the IPFS Server. If it's not already running.
                 yield return EnsureIPFSStarted();
@@ -175,25 +127,6 @@ namespace Arteranos.Services
 
             async Task InitializeIPFS()
             {
-                ipfs = null;
-
-                IPFSDaemonConnection.Status status = await IPFSDaemonConnection.EvadePortSquatters();
-
-                if(status != IPFSDaemonConnection.Status.OK)
-                {
-                    G.TransitionProgress?.OnProgressChanged(0.00f, "CANNOT USE IPFS INTERFACE");
-                    Debug.LogError(@"
-**************************************************************************
-* !!! Cannot use IPFS Interface                                      !!! *
-* Possible causes are....                                                *
-*  * Corrupted install                                                   *
-*  * System with MANY running services (port exhaustion)                 *
-**************************************************************************
-");
-                    SettingsManager.Quit();
-                    throw new ApplicationException();
-                }
-
                 self = IPFSDaemonConnection.Self;
                 ipfs = IPFSDaemonConnection.Ipfs;
 

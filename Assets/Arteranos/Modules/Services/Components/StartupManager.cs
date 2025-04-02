@@ -72,14 +72,25 @@ namespace Arteranos.Services
 
         protected void Update()
         {
-            // No TaskScheduler? Same reason as below in the same function...
-            if(G.ToQuit)
+            // Controlled shutdown
+            IEnumerator ShutdownCoroutine()
             {
+                G.IPFSService.enabled = false;
+
+                G.XRVisualConfigurator.StartFading(1.0f);
+                yield return new WaitForSeconds(0.5f);
+
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.ExitPlaymode();
 #else
                 UnityEngine.Application.Quit();
 #endif
+            }
+
+            // No TaskScheduler? Same reason as below in the same function...
+            if (G.ToQuit)
+            {
+                StartCoroutine(ShutdownCoroutine());
                 G.ToQuit = false;
             }
 

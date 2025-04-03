@@ -17,21 +17,15 @@ using System;
 using Unity.EditorCoroutines.Editor;
 using System.Collections;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.IO.Compression;
 using Arteranos.Core;
+using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Tar;
 
 namespace Arteranos.Editor
 {
 
     public class BuildPlayers
     {
-        private const string KUBO_VERSION = "v0.32.0";
-
-        private static readonly string KUBO_EXECUTABLE_ROOT = $"https://github.com/ipfs/kubo/releases/download/{KUBO_VERSION}/kubo_{KUBO_VERSION}";
-        private const string KUBO_ARCH_WIN64 = "windows-amd64";
-        private const string KUBO_ARCH_LINUX64 = "linux-amd64";
-
         // public static string appName = Application.productName;
         public static readonly string appName = "Arteranos";
 
@@ -70,7 +64,8 @@ namespace Arteranos.Editor
 
             Version.Full = $"{Version.MMP}.{Version.B}{Version.Tag}-{Version.Hash}";
 
-            TextAsset textAsset = new(JsonConvert.SerializeObject(Version, Formatting.Indented));
+            string json = JsonConvert.SerializeObject(Version, Formatting.Indented);
+            TextAsset textAsset = new(json);
 
             if(!Directory.Exists("Assets/Generated"))
                 AssetDatabase.CreateFolder("Assets", "Generated");
@@ -119,24 +114,29 @@ public static class _dummy
 {
     public static string creationTime = """ + DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK") + @""";
 }
-");
-            AssetDatabase.Refresh();
-        }
-
-        [MenuItem("Arteranos/Build/Retrieve Kubo IPFS daemon (Windows + Linux)", false, 60)]
-        public static void RetrieveIPFSDaemon()
-            => RetrieveIPFSDaemon(false);
-
-        public static void RetrieveIPFSDaemon(bool silent)
+"
+// Intended to have direct code generation -- nothing like resources.... not yet.
+#if false
++ @"
+namespace Arteranos.Core
+{
+    public partial class VersionDefaults
+    {
+        public void Defaults(Version v)
         {
-            static IEnumerator AquireIPFSExe(bool silent)
-            {
-                yield return AcquireIPFSWinExeCoroutine(silent);
-
-                yield return AcquireIPFSLinuxExeCoroutine(silent);
-            }
-
-            EditorCoroutineUtility.StartCoroutineOwnerless(AquireIPFSExe(silent));
+            v.MMP = """ + Version.MMP + @""";
+            v.MMPB = """ + Version.MMPB + @""";
+            v.B = """ + Version.B + @""";
+            v.Hash = """ + Version.Hash + @""";
+            v.Tag = """ + Version.Tag + @""";
+            v.Full = """ + Version.Full + @""";
+        }
+    }
+}
+"
+#endif
+);
+            AssetDatabase.Refresh();
         }
 
         [MenuItem("Arteranos/Build/Update version and platform", false, 120)]
@@ -188,18 +188,24 @@ public static class _dummy
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
         }
 
-        [MenuItem("Arteranos/Build/Build Installation Package (Windows)", false, 80)]
-        public static void BuildWinInstallationPackage()
+        [MenuItem("Arteranos/Run/Run Client's IPFS daemon", false, 20)]
+        public static void RunClientIPFSDaemon()
         {
-            static IEnumerator SingleTask()
-            {
-                // Build Package wipes the build/ directory, and builds
-                // the version files itself.
-                yield return AcquireIPFSWinExeCoroutine(true);
-                yield return BuildWinInstallationPackageCoroutine();
-            }
+            string RepoDir = $"{Application.persistentDataPath}/.ipfs";
+            string IPFSExePath = $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe";
 
-            EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
+            string argLine = $"--repo-dir={RepoDir} daemon --enable-pubsub-experiment";
+
+            Process process = new()
+            {
+                StartInfo = new()
+                {
+                    FileName = IPFSExePath,
+                    Arguments = argLine,
+                }
+            };
+
+            process.Start();
         }
 
         [MenuItem("Arteranos/Build/Build Installation Package (Linux)", false, 81)]
@@ -207,151 +213,10 @@ public static class _dummy
         {
             static IEnumerator SingleTask()
             {
-                yield return AcquireIPFSLinuxExeCoroutine(true);
                 yield return BuildDebianPackageCoroutine();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
-        }
-
-        [MenuItem("Arteranos/Build/Build deployment directory", false, 100)]
-        public static void BuildDeploymentDirectory()
-        {
-            static IEnumerator SingleTask()
-            {
-                // For convenience, reset build settings to force domain reload
-                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
-                EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
-
-                GetProjectGitVersion();
-
-                if (Directory.Exists("Deployment")) Directory.Delete("Deployment", true);
-                string vstr = $"{Version.Major}.{Version.Minor}.{Version.Patch}";
-
-                string nameWin64 = $"arteranos-{vstr}-Win64.exe";
-                string nameLinux64 = $"arteranos-server-{vstr}-Linux.deb";
-
-                Directory.CreateDirectory("Deployment");
-
-                File.Copy($"build/{nameWin64}", $"Deployment/{nameWin64}");
-                File.Copy($"build/{nameLinux64}", $"Deployment/{nameLinux64}");
-
-                yield return Execute("wsl", $"sha256sum >sha256sums {nameWin64} {nameLinux64} && echo \"SHA256 sums file created\"", "Deployment");
-
-                yield return Execute("cmd", "/c start .", "Deployment");
-
-                yield return Execute("cmd", "/c start notepad.exe CHANGELOG.md", ".");
-            }
-
-            EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
-        }
-
-        private static IEnumerator AcquireIPFSWinExeCoroutine(bool silent)
-        {
-            string IPFSExe = "ipfs.exe";
-            string desiredFile = $"/kubo/{IPFSExe}";
-            string archiveFormat = "zip";
-            string source = $"{KUBO_EXECUTABLE_ROOT}_{KUBO_ARCH_WIN64}.{archiveFormat}";
-
-            yield return DownloadExecutable(silent, IPFSExe, desiredFile, archiveFormat, source);
-        }
-
-        private static IEnumerator AcquireIPFSLinuxExeCoroutine(bool silent)
-        {
-            string IPFSExe = "ipfs";
-            string desiredFile = $"/{IPFSExe}";
-            string archiveFormat = "tar.gz";
-
-            string source = $"{KUBO_EXECUTABLE_ROOT}_{KUBO_ARCH_LINUX64}.{archiveFormat}";
-
-            yield return DownloadExecutable(silent, IPFSExe, desiredFile, archiveFormat, source);
-        }
-
-        private static IEnumerator DownloadExecutable(bool silent, string IPFSExe, string desiredFile, string archiveFormat, string source)
-        {
-            // TODO sha512
-            string target = $"{Application.temporaryCachePath}/downloaded-kubo-ipfs.{archiveFormat}";
-            string targetDir = $"{target}.dir";
-            string desired = $"{targetDir}{desiredFile}";
-
-            // Earlier sessions may have it.
-            if (File.Exists(IPFSExe))
-            {
-                if (!silent)
-                {
-                    Debug.Log($"ipfs.exe is already there in the project codebase, maybe you want to manually delete it?");
-                    Debug.Log(Directory.GetCurrentDirectory());
-                }
-
-                IPFSExe = desired;
-                yield break;
-            }
-
-            Debug.Log($"Downloading {source}...");
-
-            Task taskDownload = DownloadFile(source, target);
-
-            yield return new WaitUntil(() => taskDownload.IsCompleted);
-
-            Debug.Log($"Unzipping {targetDir}...");
-
-            if (Directory.Exists(targetDir)) Directory.Delete(targetDir, true);
-
-            if (archiveFormat == "zip")
-            {
-                Task taskUnzip = Task.Run(() =>
-                {
-                    try
-                    {
-                        ZipFile.ExtractToDirectory(target, targetDir);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogException(ex);
-                    }
-                });
-
-                yield return new WaitUntil(() => taskUnzip.IsCompleted);
-            }
-            else if (archiveFormat == "tar.gz")
-            {
-                using FileStream compressedFileStream = File.Open(target, FileMode.Open);
-                using MemoryStream outputFileStream = new();
-                using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-                decompressor.CopyTo(outputFileStream);
-
-                outputFileStream.Position = 0;
-                Task taskUnzip = Utils.UnTarToDirectoryAsync(outputFileStream, targetDir);
-
-                yield return new WaitUntil(() => taskUnzip.IsCompleted);
-            }
-
-            if (File.Exists(desired))
-                File.Copy(desired, IPFSExe);
-            else
-                Debug.LogError($"{desired} not found.");
-
-            Debug.Log("Done.");
-        }
-
-        private static Task DownloadFile(string source, string target)
-        {
-            return Task.Run(async () =>
-            {
-                long totalBytes = 0;
-                if (File.Exists(target)) File.Delete(target);
-
-                using HttpClient client = new();
-                client.Timeout = TimeSpan.FromSeconds(60);
-                using HttpResponseMessage response = await client.GetAsync(source).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-                totalBytes = response.Content.Headers.ContentLength ?? -1;
-                byte[] binary = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-                using Stream s = File.Create(target);
-                s.Write(binary, 0, binary.Length);
-                s.Flush();
-                s.Close();
-            });
         }
 
         public static string[] GetSceneNames()
@@ -365,52 +230,31 @@ public static class _dummy
 
         private static IEnumerator BuildWin64Coroutine()
         {
-            BuildPlayerOptions bpo = new()
+            yield return CommenceBuild(new BuildPlayerOptions()
             {
-                scenes = GetSceneNames(),
-                locationPathName = $"build/Win64/{appName}.exe",
                 target = BuildTarget.StandaloneWindows64,
                 subtarget = (int)StandaloneBuildSubtarget.Player,
-            };
-
-            yield return null;
-
-            CommenceBuild(bpo);
+            });
         }
 
         private static IEnumerator BuildWin64DSCoroutine()
         {
-            BuildPlayerOptions bpo = new()
+
+            yield return CommenceBuild(new BuildPlayerOptions()
             {
-                scenes = GetSceneNames(),
-                locationPathName = $"build/Win64-Server/{appName}-Server.exe",
                 target = BuildTarget.StandaloneWindows64,
                 subtarget = (int)StandaloneBuildSubtarget.Server,
-            };
-
-            yield return null;
-
-            CommenceBuild(bpo);
+            });
         }
 
         private static IEnumerator BuildLinux64DSCoroutine()
         {
-            const string buildTargetRoot = "build/Linux64-Server";
 
-            if(!Directory.Exists(buildTargetRoot)) Directory.CreateDirectory(buildTargetRoot);
-            if (!File.Exists($"{buildTargetRoot}/ipfs")) File.Copy("ipfs", $"{buildTargetRoot}/ipfs");
-
-            BuildPlayerOptions bpo = new()
+            yield return CommenceBuild(new BuildPlayerOptions()
             {
-                scenes = GetSceneNames(),
-                locationPathName = $"{buildTargetRoot}/{appName}-Server",
                 target = BuildTarget.StandaloneLinux64,
                 subtarget = (int)StandaloneBuildSubtarget.Server,
-            };
-
-            yield return null;
-
-            CommenceBuild(bpo);
+            });
         }
 
         private static IEnumerator Execute(string command, string argline, string cwd = "build")
@@ -470,91 +314,19 @@ public static class _dummy
 
         }
 
-        public static IEnumerator BuildWinInstallationPackageCoroutine()
+        private static IEnumerator CommenceBuild(BuildPlayerOptions bpo)
         {
-            GetProjectGitVersion();
+            yield return null;
+            bool isServer = bpo.subtarget == (int)StandaloneBuildSubtarget.Server;
+            bool isLinux = bpo.target == BuildTarget.StandaloneLinux64;
 
-            string SetupExeName = $"arteranos-{Version.Major}.{Version.Minor}.{Version.Patch}-Win64.exe";
-            string wixroot = Environment.GetEnvironmentVariable("wix");
+            string buildTargetDir = $"{(isServer ? "server" : "desktop")}-{(isLinux ? "Linux" : "Win")}-amd64";
+            string buildTargetName = $"{appName}{(isServer ? "-Server" : "")}{(isLinux ? "" : ".exe")}";
 
-            IEnumerator BuildSetup()
-            {
-                yield return Execute($"{wixroot}bin\\heat", "dir Win64 -out Win64.wxi -scom -sfrag -sreg -svb6 -ag -dr AppDir -cg Pack_Win64 -srd -var var.BinDir");
-                yield return Execute($"{wixroot}bin\\heat", "dir Win64-Server -out Win64-Server.wxi -scom -sfrag -sreg -svb6 -ag -dr ServerDir -cg Pack_Win64_Server -srd -var var.SrvBinDir");
-                yield return Execute($"{wixroot}bin\\candle", "..\\Setup\\Main.wxs Win64-Server.wxi Win64.wxi -ext WixFirewallExtension -dBinDir=Win64 -dSrvBinDir=Win64-Server -arch x64");
-                yield return Execute($"{wixroot}bin\\light", "Main.wixobj Win64.wixobj Win64-Server.wixobj -ext WixUIExtension -ext WixFirewallExtension -o ArteranosSetup");
-            }
-
-            IEnumerator BuildSetupExe()
-            {
-                yield return Execute($"{wixroot}bin\\candle", "-ext WixNetFxExtension -ext WixBalExtension -ext WixUtilExtension ..\\Setup\\MainBurn.wxs");
-                yield return Execute($"{wixroot}bin\\light", $"-ext WixNetFxExtension -ext WixBalExtension -ext WixUtilExtension MainBurn.wixobj -o {SetupExeName}");
-            }
-
-            int progressId = Progress.Start("Building...");
-
-            try
-            {
-                // Debug convenience when false - for just building the installer package,
-                // without building the actual executables
-                if(true)
-                {
-                    Progress.Report(progressId, 0.40f, "Build Win64 Dedicated Server");
-
-                    yield return BuildWin64DSCoroutine();
-
-                    Progress.Report(progressId, 0.60f, "Build Win64 Desktop");
-
-                    yield return BuildWin64Coroutine();
-
-                    Directory.Delete("build/Win64/Arteranos_BurstDebugInformation_DoNotShip", true);
-                    Directory.Delete("build/Win64-Server/Arteranos-Server_BurstDebugInformation_DoNotShip", true);
-
-                    File.Copy("ipfs.exe", "build/ipfs.exe", true);
-
-                }
-
-                File.Move("build/Win64/Arteranos.exe", "build/Arteranos.exe");
-                File.Move("build/Win64-Server/Arteranos-Server.exe", "build/Arteranos-Server.exe");
- 
-                Progress.Report(progressId, 0.80f, "Build setup wizard");
-
-                if (File.Exists("build/ArteranosSetup.msi")) File.Delete("build/ArteranosSetup.msi");
-                if (File.Exists($"build/{SetupExeName}")) File.Delete($"build/{SetupExeName}");
-
-                yield return BuildSetup();
-
-                File.Move("build/Arteranos.exe", "build/Win64/Arteranos.exe");
-                File.Move("build/Arteranos-Server.exe", "build/Win64-Server/Arteranos-Server.exe");
-
-                if (!File.Exists("build/ArteranosSetup.msi"))
-                {
-                    Debug.LogError("Installation wizard build failed - see logs");
-                    yield break;
-                }
-
-                yield return BuildSetupExe();
-
-                if(!File.Exists($"build/{SetupExeName}"))
-                {
-                    Debug.LogError("Installation executable build failed - see logs");
-                    yield break;
-                }
-
-                Debug.Log("Build task finished.");
-            }
-            finally
-            {
-                Progress.Remove(progressId);
-            }
-        }
-        private static void CommenceBuild(BuildPlayerOptions bpo)
-        {
+            bpo.locationPathName = $"build/{buildTargetDir}/{buildTargetName}";
+            bpo.scenes = GetSceneNames();
             bpo.options = BuildOptions.CleanBuildCache;
-            bpo.extraScriptingDefines =
-                bpo.subtarget == (int)StandaloneBuildSubtarget.Server
-                ? new[] { "UNITY_SERVER" }
-                : new string[0];
+            bpo.extraScriptingDefines = isServer ? new[] { "UNITY_SERVER" } : new string[0];
 
             string buildLocation = Path.GetDirectoryName(bpo.locationPathName);
             EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, bpo.target);
@@ -564,7 +336,9 @@ public static class _dummy
             BuildReport report = BuildPipeline.BuildPlayer(bpo);
             BuildSummary summary = report.summary;
 
-            if(summary.result == BuildResult.Succeeded)
+            yield return CreateBuildOutputTar(buildTargetDir);
+
+            if (summary.result == BuildResult.Succeeded)
             {
                 Debug.Log($"Build succeeded: {summary.totalSize} bytes, {summary.totalTime} time.");
             }
@@ -572,6 +346,72 @@ public static class _dummy
             {
                 Debug.LogError($"Build unsuccesful: {summary.result}");
             }
+        }
+
+        private static IEnumerator CreateBuildOutputTar(string buildTargetDir)
+        {
+            IEnumerator CreateTarGZ(string tgzFilename, string sourceDirectory)
+            {
+                Stream outStream = File.Create(tgzFilename);
+                Stream gzoStream = new GZipOutputStream(outStream);
+                TarArchive tarArchive = TarArchive.CreateOutputTarArchive(gzoStream);
+
+                // Note that the RootPath is currently case sensitive and must be forward slashes e.g. "c:/temp"
+                // and must not end with a slash, otherwise cuts off first char of filename
+                // This is scheduled for fix in next release
+                tarArchive.RootPath = sourceDirectory.Replace('\\', '/');
+                if (tarArchive.RootPath.EndsWith("/"))
+                    tarArchive.RootPath = tarArchive.RootPath.Remove(tarArchive.RootPath.Length - 1);
+
+                // Omit the (empty) root directory entry
+                yield return AddDirectoryFilesToTar(tarArchive, sourceDirectory, true, false);
+
+                tarArchive.Close();
+            }
+
+            IEnumerator AddDirectoryFilesToTar(TarArchive tarArchive, string sourceDirectory, bool recurse, bool self = true)
+            {
+                TarEntry tarEntry = null;
+                if (self)
+                {
+                    // Optionally, write an entry for the directory itself.
+                    // Specify false for recursion here if we will add the directory's files individually.
+                    tarEntry = TarEntry.CreateEntryFromFile(sourceDirectory);
+
+                    tarEntry.TarHeader.Mode = 493;  // drwxr-xr-x
+                    tarArchive.WriteEntry(tarEntry, false);
+                }
+
+                // Write each file to the tar.
+                string[] filenames = Directory.GetFiles(sourceDirectory);
+                foreach (string filename in filenames)
+                {
+                    yield return null;
+
+                    tarEntry = TarEntry.CreateEntryFromFile(filename);
+
+                    tarEntry.GroupId = 1000;
+                    tarEntry.GroupName = "arteranos";
+                    tarEntry.UserId = 1000;
+                    tarEntry.UserName = "arteranos";
+                    tarEntry.TarHeader.Mode = 33261;    // -rwxr-xr-x (100755, with regular file)
+                    tarArchive.WriteEntry(tarEntry, true);
+                }
+
+                if (recurse)
+                {
+                    string[] directories = Directory.GetDirectories(sourceDirectory);
+                    foreach (string directory in directories)
+                    {
+                        // Obvious enough.
+                        if (directory.EndsWith("DoNotShip")) continue;
+
+                        yield return AddDirectoryFilesToTar(tarArchive, directory, recurse);
+                    }
+                }
+            }
+
+            yield return CreateTarGZ($"build/{buildTargetDir}.tar.gz", $"build/{buildTargetDir}");
         }
     }
 }

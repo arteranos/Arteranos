@@ -73,15 +73,9 @@ namespace Arteranos.Services
                 {
                     IPFSDaemonConnection.Status res = IPFSDaemonConnection.Status.CommandFailed;
 
-                    int port = IPFSDaemonConnection.GetAPIPort();
+                    yield return Asyncs.Async2Coroutine(() => IPFSDaemonConnection.CheckAPIConnection(5), _res => res = _res);
 
-                    if (port >= 0)
-                    {
-                        Debug.Log($"Present configuration says API port {port}");
-                        yield return Asyncs.Async2Coroutine(() => IPFSDaemonConnection.CheckAPIConnection(1), _res => res = _res);
-                    }
-
-                    if (port == 0 || res != IPFSDaemonConnection.Status.OK)
+                    if (res != IPFSDaemonConnection.Status.OK)
                     {
                         G.TransitionProgress?.OnProgressChanged(0.00f, "NO IPFS INSTANCE");
                         Debug.LogError(@"
@@ -371,7 +365,8 @@ namespace Arteranos.Services
                 yield return new WaitUntil(() => t.IsCompleted);
 
                 int timeout = 300;
-                if(t.Result < 2)
+                int result = t.Result;
+                if (result < 2)
                 {
                     Debug.Log($"No other peers detected, discovery timeout shortened");
                     timeout = 5;

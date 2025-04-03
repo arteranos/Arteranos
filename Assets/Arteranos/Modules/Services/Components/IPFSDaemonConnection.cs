@@ -48,7 +48,7 @@ namespace Arteranos.Services
         private static bool? _RepoExists = null;
         private static int? APIPort = null;
 
-        public static Status CheckRepository(bool reinitAllowed)
+        public static Status CheckRepository()
         {
             if (_RepoExists ?? false) return Status.OK;
               
@@ -81,7 +81,7 @@ namespace Arteranos.Services
         {
             if (APIPort != null) return APIPort.Value;
 
-            if (CheckRepository(false) != Status.OK) return -1;
+            if (CheckRepository() != Status.OK) return -1;
             int port = -1;
 
             try
@@ -100,7 +100,7 @@ namespace Arteranos.Services
             return port;
         }
 
-        public static async Task<Status> CheckAPIConnection(int attempts, bool verify = true)
+        public static async Task<Status> CheckAPIConnection(int attempts)
         {
             int port = GetAPIPort();
 
@@ -108,13 +108,11 @@ namespace Arteranos.Services
 
             IpfsClientEx ipfs = new($"http://localhost:{port}");
 
-            Status status = Status.DeadDaemon;
             for(int i = 0;  i < attempts; i++)
             {
                 try
                 {
                     _ = await ipfs.Config.GetAsync();
-                    status = Status.OK;
                     break;
                 }
                 catch // (Exception es) 
@@ -124,8 +122,6 @@ namespace Arteranos.Services
 
                 await Task.Delay(1000);
             }
-
-            if (status != Status.OK || !verify) return status;
 
             try
             {

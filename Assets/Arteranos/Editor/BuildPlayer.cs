@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using Arteranos.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Arteranos.Editor
 {
@@ -317,12 +319,15 @@ namespace Arteranos.Core
         private static IEnumerator CommenceBuild(BuildPlayerOptions bpo)
         {
             yield return null;
+            BuildSummary summary = default;
+
             bool isServer = bpo.subtarget == (int)StandaloneBuildSubtarget.Server;
             bool isLinux = bpo.target == BuildTarget.StandaloneLinux64;
 
             string buildTargetDir = $"{(isServer ? "server" : "desktop")}-{(isLinux ? "Linux" : "Win")}-amd64";
             string buildTargetName = $"{appName}{(isServer ? "-Server" : "")}{(isLinux ? "" : ".exe")}";
 
+#if true
             bpo.locationPathName = $"build/{buildTargetDir}/{buildTargetName}";
             bpo.scenes = GetSceneNames();
             bpo.options = BuildOptions.CleanBuildCache;
@@ -334,18 +339,25 @@ namespace Arteranos.Core
             EditorUserBuildSettings.SetBuildLocation(BuildTarget.StandaloneWindows64, $"{buildLocation}/");
 
             BuildReport report = BuildPipeline.BuildPlayer(bpo);
-            BuildSummary summary = report.summary;
+#endif
+            summary = report.summary;
+
+            if (summary.result == BuildResult.Unknown)
+            {
+                Debug.Log("No build run.");
+                yield break;
+            }
+            else if (summary.result != BuildResult.Succeeded)
+            {
+                Debug.LogError($"Build unsuccesful: {summary.result}");
+                yield break;
+            }
 
             yield return CreateBuildOutputTar(buildTargetDir);
 
-            if (summary.result == BuildResult.Succeeded)
-            {
-                Debug.Log($"Build succeeded: {summary.totalSize} bytes, {summary.totalTime} time.");
-            }
-            else
-            {
-                Debug.LogError($"Build unsuccesful: {summary.result}");
-            }
+            yield return HashBuildOutput(buildTargetDir);
+            
+            Debug.Log($"Build succeeded: {summary.totalSize} bytes, {summary.totalTime} time.");
         }
 
         private static IEnumerator CreateBuildOutputTar(string buildTargetDir)
@@ -411,7 +423,104 @@ namespace Arteranos.Core
                 }
             }
 
+            Debug.Log("Creating build tarball");
+
             yield return CreateTarGZ($"build/{buildTargetDir}.tar.gz", $"build/{buildTargetDir}");
+        }
+
+        private class FileEntry
+        {
+            public string Cid;
+            public string Path;
+            public long Size;
+        }
+
+        private static IEnumerator HashBuildOutput(string buildTargetDir)
+        {
+            List<FileEntry> newList = new();
+
+            IEnumerator HashEntriesChunk(StringBuilder fileArgs, string rootPath)
+            {
+                string IPFSExePath = $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe";
+
+                ProcessStartInfo psi = new()
+                {
+                    FileName = IPFSExePath,
+                    Arguments = $"add --only-hash {fileArgs}",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                };
+
+
+                using Process process = Process.Start(psi);
+                using StreamReader reader = process.StandardOutput;
+                string data = reader.ReadToEnd();
+
+                string[] lines = data.Split('\n', '\r', StringSplitOptions.RemoveEmptyEntries);
+                foreach (string line in lines)
+                {
+                    string[] columns = line.Split(' ');
+                    if (columns.Length < 3 || (columns.Length > 0 && columns[0] != "added"))
+                    {
+                        Debug.LogWarning($"Unrecognized response: {line}");
+                        continue;
+                    }
+
+                    string cid = columns[1];
+                    string file = string.Join(' ', columns[2..]);
+
+                    string path = $"{rootPath}{file}";
+
+                    FileInfo fileInfo = new($"build/{buildTargetDir}/{path}");
+
+                    newList.Add(new()
+                    {
+                        Cid = cid,
+                        Path = path,
+                        Size = fileInfo.Length
+                    });
+                }
+
+                yield return null;
+            }
+
+            IEnumerator HashEntries(string dir, string rootPath)
+            {
+                foreach (string entry in Directory.GetDirectories(dir))
+                {
+                    // Obvious enough.
+                    if (entry.EndsWith("DoNotShip")) continue;
+
+                    yield return HashEntries(entry, $"{rootPath}{Path.GetFileName(entry)}/");
+                }
+
+                StringBuilder fileArgs = new();
+
+                foreach(string entry in Directory.GetFiles(dir))
+                {
+                    if(fileArgs.Length > 0) fileArgs.Append(" ");
+                    fileArgs.Append("\"");
+                    fileArgs.Append(entry);
+                    fileArgs.Append("\"");
+
+                    if(fileArgs.Length > 512)
+                    {
+                        yield return HashEntriesChunk(fileArgs, rootPath);
+                        fileArgs = new();
+                    }
+                }
+
+                if(fileArgs.Length > 0)
+                    yield return HashEntriesChunk(fileArgs, rootPath);
+            }
+
+            Debug.Log("Creating file hashes");
+
+            yield return HashEntries($"build/{buildTargetDir}", "");
+
+            string json = JsonConvert.SerializeObject(newList, Formatting.Indented);
+            File.WriteAllText($"build/{buildTargetDir}-FileList.json", json);
         }
     }
 }

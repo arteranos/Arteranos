@@ -154,6 +154,22 @@ namespace Arteranos.Core
             Debug.Log($"Version detected: Full={v.Full}, M.M.P={v.MMP}");
         }
 
+        [MenuItem("Arteranos/Build/Build ALL", false, 100)]
+        public static void BuildAll()
+        {
+            static IEnumerator SingleTask()
+            {
+                GetProjectGitVersion();
+                yield return BuildLinux64DSCoroutine();
+
+                yield return BuildWin64DSCoroutine();
+
+                yield return BuildWin64Coroutine();
+            }
+
+            EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
+        }
+
         [MenuItem("Arteranos/Build/Build Windows64", false, 140)]
         public static void BuildWin64()
         {
@@ -316,9 +332,10 @@ namespace Arteranos.Core
 
         }
 
-        private static IEnumerator CommenceBuild(BuildPlayerOptions bpo)
+        private static IEnumerator CommenceBuild(BuildPlayerOptions bpo, bool buildStep = true)
         {
             yield return null;
+
             BuildSummary summary = default;
 
             bool isServer = bpo.subtarget == (int)StandaloneBuildSubtarget.Server;
@@ -327,20 +344,23 @@ namespace Arteranos.Core
             string buildTargetDir = $"{(isServer ? "server" : "desktop")}-{(isLinux ? "Linux" : "Win")}-amd64";
             string buildTargetName = $"{appName}{(isServer ? "-Server" : "")}{(isLinux ? "" : ".exe")}";
 
-#if true
-            bpo.locationPathName = $"build/{buildTargetDir}/{buildTargetName}";
-            bpo.scenes = GetSceneNames();
-            bpo.options = BuildOptions.CleanBuildCache;
-            bpo.extraScriptingDefines = isServer ? new[] { "UNITY_SERVER" } : new string[0];
+            if(buildStep)
+            {
+                BumpForceReloadFile();
 
-            string buildLocation = Path.GetDirectoryName(bpo.locationPathName);
-            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, bpo.target);
-            EditorUserBuildSettings.standaloneBuildSubtarget = (StandaloneBuildSubtarget)bpo.subtarget;
-            EditorUserBuildSettings.SetBuildLocation(BuildTarget.StandaloneWindows64, $"{buildLocation}/");
+                bpo.locationPathName = $"build/{buildTargetDir}/{buildTargetName}";
+                bpo.scenes = GetSceneNames();
+                bpo.options = BuildOptions.CleanBuildCache;
+                bpo.extraScriptingDefines = isServer ? new[] { "UNITY_SERVER" } : new string[0];
 
-            BuildReport report = BuildPipeline.BuildPlayer(bpo);
-#endif
-            summary = report.summary;
+                string buildLocation = Path.GetDirectoryName(bpo.locationPathName);
+                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, bpo.target);
+                EditorUserBuildSettings.standaloneBuildSubtarget = (StandaloneBuildSubtarget)bpo.subtarget;
+                EditorUserBuildSettings.SetBuildLocation(BuildTarget.StandaloneWindows64, $"{buildLocation}/");
+
+                BuildReport report = BuildPipeline.BuildPlayer(bpo);
+                summary = report.summary;
+            }
 
             if (summary.result == BuildResult.Unknown)
             {

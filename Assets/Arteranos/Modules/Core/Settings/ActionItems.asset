@@ -25,7 +25,7 @@ MonoBehaviour:
     ActionGameObject: {fileID: 4304480360161841479, guid: 68f66881523bc704daf73f87819e7367,
       type: 3}
   - Id: sysMenu
-    ActionGameObject: {fileID: 4193041269047191700, guid: cc0253c76cfe89d428cb1feef9f9861f,
+    ActionGameObject: {fileID: 6657842551678389014, guid: b90b6634593a9c94ea0a0b898ca9c59d,
       type: 3}
   - Id: fileBrowser
     ActionGameObject: {fileID: 4193041269047191700, guid: 42873459c13e7eb4f9619b75288f031a,
@@ -37,7 +37,7 @@ MonoBehaviour:
     ActionGameObject: {fileID: 1889180529585697687, guid: 15a025e4ea26c034e8217fba633838d8,
       type: 3}
   - Id: worldEditor
-    ActionGameObject: {fileID: 4193041269047191700, guid: cbe39bcf4d0a1164f9c749a18f894bbf,
+    ActionGameObject: {fileID: 1086117836738361552, guid: c57a2b340e1b8dd40ab9ccc6d88106a2,
       type: 3}
   - Id: embedded.worldEditor.addNew
     ActionGameObject: {fileID: 0}

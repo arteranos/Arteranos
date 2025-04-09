@@ -1,9 +1,0 @@
-#!/bin/bash
-
-[ "$(id -u)" -eq "0" ] || exit 100
-
-logfile=/var/arteranos/Server.log
-
-[ -f $logfile ] && mv $logfile $logfile.old
-
-su -s /bin/bash -c "@MainExePath@ $* >$logfile 2>&1" arteranos

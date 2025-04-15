@@ -49,26 +49,37 @@ namespace Arteranos.Core
         [ProtoMember(12)]
         public UserID WorldAuthor;      // The world creator.
 
-        public void Serialize(Stream stream, bool changeAuthor = false)
+        public static WorldAccessInfo Create(UserID author)
         {
-            if (changeAuthor)
+            return new WorldAccessInfo()
             {
-                string tmpPassword = Password;
-                AccessAuthor = G.Client.MeUserID;
-                Signature = null;
-                Password = null;
+                Password = null,
+                DefaultLevel = WorldAccessInfoLevel.Pin,
+                AccessAuthor = author,
+                WorldAuthor = author
+            };
+        }
 
-                using (MemoryStream ms = new())
-                {
-                    Serializer.Serialize(ms, this);
-                    ms.Position = 0;
-                    Client.Sign(ms.ToArray(), out Signature);
-                }
+        // Sure, everyone may edit this structure, but we can be sure _who_ done it
+        public void Serialize(Stream stream)
+        {
+            // At least to have some dumbf**k shield...
+            if (!CanAdmin(G.Client.MeUserID))
+                throw new InvalidDataException("ACL access denied");
 
-                Password = tmpPassword;
+            string tmpPassword = Password;
+            AccessAuthor = G.Client.MeUserID;
+            Signature = null;
+            Password = null;
+
+            using (MemoryStream ms = new())
+            {
+                Serializer.Serialize(ms, this);
+                ms.Position = 0;
+                Client.Sign(ms.ToArray(), out Signature);
             }
-            else if (AccessAuthor == null)
-                throw new InvalidDataException("World Access Info without Author ID");
+
+            Password = tmpPassword;
 
             Serializer.Serialize(stream, this);
             stream.Flush();

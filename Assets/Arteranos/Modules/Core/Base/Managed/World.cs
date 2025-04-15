@@ -8,14 +8,11 @@
 using Arteranos.WorldEdit;
 using Ipfs;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
-
 
 namespace Arteranos.Core.Managed
 {
@@ -32,14 +29,17 @@ namespace Arteranos.Core.Managed
         {
             RootCid = rootCid;
 
-            TemplateCid = new(async () => (await GetWorldLinks()).Item1);
-            DecorationCid = new(async () => (await GetWorldLinks()).Item2);
+            TemplateCid = new(async () => (await GetWorldLinks()).template);
+            DecorationCid = new(async () => (await GetWorldLinks()).decoration);
             WorldInfo = new(async () => await GetWorldInfo());
             TemplateInfo = new(async () => await GetTemplateInfo());
             ScreenshotPNG = new(async () => await GetActiveScreenshot());
 
             TemplateContent = new(async () => await GetAssetBundle());
             DecorationContent = new(async () => await GetWorldDecoration());
+
+            AccessInfoCid = new(async () => (await GetWorldLinks()).aci);
+            WorldAccessInfo = new(async () => await GetWorldAccessInfo());
         }
 
         public static implicit operator World(Cid rootCid) => rootCid != null ? new(rootCid) : null;
@@ -55,6 +55,11 @@ namespace Arteranos.Core.Managed
         public readonly AsyncLazy<Cid> DecorationCid;
 
         /// <summary>
+        /// The Access Info for this world, null if it's just everyone-pinnable
+        /// </summary>
+        public readonly AsyncLazy<Cid> AccessInfoCid;
+
+        /// <summary>
         /// The active World Info, same as TemplateInfo if it's a blank world
         /// </summary>
         public readonly AsyncLazy<WorldInfo> WorldInfo;
@@ -63,6 +68,7 @@ namespace Arteranos.Core.Managed
         /// The template's info.
         /// </summary>
         public readonly AsyncLazy<WorldInfo> TemplateInfo;
+
         /// <summary>
         /// The screemshot PNG
         /// </summary>
@@ -78,15 +84,21 @@ namespace Arteranos.Core.Managed
         /// </summary>
         public readonly AsyncLazy<IWorldDecoration> DecorationContent;
 
+        /// <summary>
+        /// The world access info
+        /// </summary>
+        public readonly AsyncLazy<WorldAccessInfo> WorldAccessInfo;
+
         public async Task<bool> IsFullWorld() => await DecorationCid != null;
 
 
         private string m_TemplateCid = null;
         private string m_DecorationCid = null;
+        private string m_AccessInfoCid = null;
 
-        private async Task<(string,string)> GetWorldLinks()
+        private async Task<(string template,string decoration, string aci)> GetWorldLinks()
         {
-            if (m_TemplateCid != null) return (m_TemplateCid, m_DecorationCid);
+            if (m_TemplateCid != null) return (m_TemplateCid, m_DecorationCid, m_AccessInfoCid);
 
             Dictionary<string, IFileSystemLink> dir = new();
 
@@ -104,7 +116,11 @@ namespace Arteranos.Core.Managed
                 ? dir["Decoration"].Id
                 : null;
 
-            return (m_TemplateCid, m_DecorationCid);
+            m_AccessInfoCid = dir.ContainsKey("AccessInfo")
+                ? dir["AccessInfo"].Id
+                : null;
+
+            return (m_TemplateCid, m_DecorationCid, m_AccessInfoCid);
         }
 
         private async Task<byte[]> GetActiveScreenshot()
@@ -156,6 +172,18 @@ namespace Arteranos.Core.Managed
             using CancellationTokenSource cts = new(4000);
             using MemoryStream ms = await G.IPFSService.ReadIntoMS(path, cancel: cts.Token);
             return G.WorldEditorData.DeserializeWD(ms);
+        }
+
+        private async Task<WorldAccessInfo> GetWorldAccessInfo()
+        {
+            Cid path = await AccessInfoCid;
+
+            if(path == null) return null;
+
+            using CancellationTokenSource cts = new(4000);
+            using MemoryStream ms = await G.IPFSService.ReadIntoMS(path, cancel: cts.Token);
+
+            return Core.WorldAccessInfo.Deserialize(ms.ToArray());
         }
 
         private async Task<AssetBundle> GetAssetBundle()

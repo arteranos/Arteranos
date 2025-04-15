@@ -13,7 +13,8 @@ namespace Arteranos.Core
     // Ref. #89 - World access control
     public partial class WorldAccessInfo
     {
-        public bool IsBanned(UserID userID) => BannedUsers.Contains(userID) && 
+        public bool IsBanned(UserID userID) => 
+            BannedUsers.Contains(userID) && 
             (AccessAuthor != userID && WorldAuthor != userID);
         public bool CanView(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.View);
         public bool CanPin(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.Pin);

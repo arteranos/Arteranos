@@ -14,18 +14,15 @@ namespace Arteranos.Core
     public partial class WorldAccessInfo
     {
         public bool IsBanned(UserID userID) => 
-            BannedUsers.Contains(userID) && 
-            (AccessAuthor != userID && WorldAuthor != userID);
+            BannedUsers.Contains(userID);
         public bool CanView(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.View);
         public bool CanPin(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.Pin);
         public bool CanEdit(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.Edit);
-        public bool CanAdmin(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.Admin) || userID == AccessAuthor;
+        public bool CanAdmin(UserID userID) => CheckUAL(userID, WorldAccessInfoLevel.Admin);
 
         public bool CheckUAL(UserID user, WorldAccessInfoLevel neededAL)
         {
             if(IsBanned(user)) return false;
-
-            if(WorldAuthor == user) return true;
 
             return UserALs.ContainsKey(user)
                 ? neededAL >= UserALs[user]

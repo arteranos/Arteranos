@@ -40,74 +40,26 @@ namespace Arteranos.Core
         [ProtoMember(6)]
         public Dictionary<UserID, WorldAccessInfoLevel> UserALs = new(); // Access levels for individual users
 
-        [ProtoMember(10)]
-        public UserID AccessAuthor;     // Creator of this data, the world creator or the delegates
+        // Never used - WorldAuthor and Signature - embedded in WorldInfo, removed redundancy
+        //[ProtoMember(10)]
+        //public UserID AccessAuthor;     // Creator of this data, the world creator or the delegates
 
-        [ProtoMember(11)]
-        public byte[] Signature;        // Against AccessAuthor's signing key
+        //[ProtoMember(11)]
+        //public byte[] Signature;        // Against AccessAuthor's signing key
 
-        [ProtoMember(12)]
-        public UserID WorldAuthor;      // The world creator.
+        //[ProtoMember(12)]
+        //public UserID WorldAuthor;      // The world creator.
 
         public static WorldAccessInfo Create(UserID author)
         {
-            return new WorldAccessInfo()
+            WorldAccessInfo info = new WorldAccessInfo()
             {
-                Password = null,
                 DefaultLevel = WorldAccessInfoLevel.Pin,
-                AccessAuthor = author,
-                WorldAuthor = author
             };
-        }
 
-        // Sure, everyone may edit this structure, but we can be sure _who_ done it
-        public void Serialize(Stream stream)
-        {
-            // At least to have some dumbf**k shield...
-            if (!CanAdmin(G.Client.MeUserID))
-                throw new InvalidDataException("ACL access denied");
+            info.UserALs[author] = WorldAccessInfoLevel.Admin;
 
-            string tmpPassword = Password;
-            AccessAuthor = G.Client.MeUserID;
-            Signature = null;
-            Password = null;
-
-            using (MemoryStream ms = new())
-            {
-                Serializer.Serialize(ms, this);
-                ms.Position = 0;
-                Client.Sign(ms.ToArray(), out Signature);
-            }
-
-            Password = tmpPassword;
-
-            Serializer.Serialize(stream, this);
-            stream.Flush();
-        }
-
-        public static WorldAccessInfo Deserialize(byte[] data)
-        {
-            WorldAccessInfo wai = Serializer.Deserialize<WorldAccessInfo>(new MemoryStream(data));
-
-            using (MemoryStream ms = new()) 
-            {
-                // Password and signature itself is NOT covered by the signature.
-                byte[] signature = wai.Signature;
-                string tmpPassword = wai.Password;
-                wai.Signature = null;
-                wai.Password = null;
-
-                Serializer.Serialize(ms, wai);
-                ms.Position = 0;
-
-                // Throw if invalid signature
-                wai.AccessAuthor.SignPublicKey.Verify(ms.ToArray(), signature);
-
-                wai.Signature = signature;
-                wai.Password = tmpPassword;
-            }
-
-            return wai;
+            return info;
         }
     }
 }

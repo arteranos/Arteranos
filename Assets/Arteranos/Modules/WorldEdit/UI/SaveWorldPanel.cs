@@ -49,6 +49,9 @@ namespace Arteranos.WorldEdit
         private GameObject ScreenshotCamera;
         private bool needUpdateTag = false;
 
+        private UserID WorldAuthor;
+        private WorldAccessInfo WorldAccessInfo;
+
         protected override void Awake()
         {
             base.Awake();
@@ -112,13 +115,13 @@ namespace Arteranos.WorldEdit
 
                 string worldName = G.WorldEditorData.WorldName;
 
-                lbl_Author.text = G.Client.MeUserID;
                 txt_WorldName.text = worldName;
                 txt_WorldDescription.text = G.WorldEditorData.WorldDescription;
 
                 //WorldDownloader's info may be outdated if we fell back to offline.
                 if (G.World.World == null)
                 {
+                    lbl_Author.text = G.Client.MeUserID;
                     worldTemplateCid = null;
                     lbl_Template.text = "None";
                 }
@@ -126,15 +129,22 @@ namespace Arteranos.WorldEdit
                 {
                     World World = G.World.World;
 
+                    yield return World.WorldInfo.WaitFor();                    
                     yield return World.TemplateInfo.WaitFor();
 
-                    WorldInfo info = World.TemplateInfo;
+                    WorldInfo templateInfo = World.TemplateInfo;
+                    WorldInfo worldInfo = World.WorldInfo;
 
-                    worldTemplateCid = info.WorldCid;
+                    // Retain the world authorship
+                    WorldAuthor = worldInfo.Author;
+                    WorldAccessInfo accessInfo = worldInfo.AccessInfo;
+
+                    worldTemplateCid = templateInfo.WorldCid;
+                    lbl_Author.text = worldInfo.Author;
 
                     lbl_Template.text = string.Format(templatePattern,
-                        info.WorldCid[^12..],
-                        info.WorldName);
+                        templateInfo.WorldCid[^12..],
+                        templateInfo.WorldName);
                 }
 
                 // As long as the user changes the name, we need the "updated" tag.
@@ -265,16 +275,23 @@ namespace Arteranos.WorldEdit
                 worldName = $"{worldName} (updated {nowStr})";
             }
 
+            // TODO Move WorldAccessInfo holding to WorldEditorData
+            // Null WAI means Public Domain, like templates. Building world up from a template means taking ownership.
+            if(WorldAccessInfo == null)
+            {
+                WorldAuthor = G.Client.MeUserID;
+                WorldAccessInfo = WorldAccessInfo.Create(WorldAuthor);
+            }
 
             WorldInfo wi = new()
             {
-                Author = G.Client.MeUserID,
+                Author = WorldAuthor,
                 ContentRating = G.WorldEditorData.ContentWarning,
                 Created = DateTime.UtcNow,
                 WorldName = worldName,
                 WorldDescription = G.WorldEditorData.WorldDescription,
                 WorldCid = null, // Cannot create a self-reference, delay it to the WorldDownloader
-                Signature = null,
+                AccessInfo = WorldAccessInfo,
             };
 
             WorldDecoration wd = new()

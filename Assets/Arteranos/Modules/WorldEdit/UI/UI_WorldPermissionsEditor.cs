@@ -59,31 +59,30 @@ namespace Arteranos.WorldEdit
         {
             base.OnEnable();
 
-            if (titlePattern == null) titlePattern = lbl_title.text;
-
-            string id = G.World?.Name ?? "Nowhere";
-            WorldInfo info = G.World?.World.WorldInfo.Result;
-
-            lbl_title.text = string.Format(titlePattern, info.WorldName, (string)info.Author);
-
-            try
+            IEnumerator Cor()
             {
-                // Main reason would be the signature being broken
-                accessInfo = G.World?.World.WorldAccessInfo.Result;
+                World world = G.World.World;
+
+                yield return world.WorldInfo.WaitFor();
+
+                if (titlePattern == null) titlePattern = lbl_title.text;
+
+                string id = G.World?.Name ?? "Nowhere";
+                WorldInfo info = world.WorldInfo;
+
+                lbl_title.text = string.Format(titlePattern, info.WorldName, (string)info.Author);
+
+                // If there isn't one, create a new one
+                accessInfo = accessInfo ?? WorldAccessInfo.Create(info.Author);
+
+                spn_DefaultPermission.value = (int)accessInfo.DefaultLevel;
+
+                RebuildACLView();
+
+                RebuildPossibleUsers();
             }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-            }
 
-            // If there isn't one, create a new one
-            accessInfo = accessInfo ?? WorldAccessInfo.Create(info.Author);
-
-            spn_DefaultPermission.value = (int)accessInfo.DefaultLevel;
-
-            RebuildACLView();
-
-            RebuildPossibleUsers();
+            StartCoroutine(Cor());
         }
 
         private void RebuildPossibleUsers()

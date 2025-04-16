@@ -37,9 +37,6 @@ namespace Arteranos.Core.Managed
 
             TemplateContent = new(async () => await GetAssetBundle());
             DecorationContent = new(async () => await GetWorldDecoration());
-
-            AccessInfoCid = new(async () => (await GetWorldLinks()).aci);
-            WorldAccessInfo = new(async () => await GetWorldAccessInfo());
         }
 
         public static implicit operator World(Cid rootCid) => rootCid != null ? new(rootCid) : null;
@@ -53,11 +50,6 @@ namespace Arteranos.Core.Managed
         /// The decoration, null if there idn't one (aka blank world)
         /// </summary>
         public readonly AsyncLazy<Cid> DecorationCid;
-
-        /// <summary>
-        /// The Access Info for this world, null if it's just everyone-pinnable
-        /// </summary>
-        public readonly AsyncLazy<Cid> AccessInfoCid;
 
         /// <summary>
         /// The active World Info, same as TemplateInfo if it's a blank world
@@ -84,21 +76,15 @@ namespace Arteranos.Core.Managed
         /// </summary>
         public readonly AsyncLazy<IWorldDecoration> DecorationContent;
 
-        /// <summary>
-        /// The world access info
-        /// </summary>
-        public readonly AsyncLazy<WorldAccessInfo> WorldAccessInfo;
-
         public async Task<bool> IsFullWorld() => await DecorationCid != null;
 
 
         private string m_TemplateCid = null;
         private string m_DecorationCid = null;
-        private string m_AccessInfoCid = null;
 
-        private async Task<(string template,string decoration, string aci)> GetWorldLinks()
+        private async Task<(string template,string decoration)> GetWorldLinks()
         {
-            if (m_TemplateCid != null) return (m_TemplateCid, m_DecorationCid, m_AccessInfoCid);
+            if (m_TemplateCid != null) return (m_TemplateCid, m_DecorationCid);
 
             Dictionary<string, IFileSystemLink> dir = new();
 
@@ -116,11 +102,7 @@ namespace Arteranos.Core.Managed
                 ? dir["Decoration"].Id
                 : null;
 
-            m_AccessInfoCid = dir.ContainsKey("AccessInfo")
-                ? dir["AccessInfo"].Id
-                : null;
-
-            return (m_TemplateCid, m_DecorationCid, m_AccessInfoCid);
+            return (m_TemplateCid, m_DecorationCid);
         }
 
         private async Task<byte[]> GetActiveScreenshot()
@@ -146,8 +128,8 @@ namespace Arteranos.Core.Managed
                 WorldDescription = metaData.WorldDescription,
                 Author = metaData.AuthorID,
                 ContentRating = metaData.ContentRating,
-                Signature = null,
                 Created = metaData.Created,
+                AccessInfo = null, // Templates are considered Public Domain, to prevent identical copies, just for changing authors
             };
             return win;
         }
@@ -172,18 +154,6 @@ namespace Arteranos.Core.Managed
             using CancellationTokenSource cts = new(4000);
             using MemoryStream ms = await G.IPFSService.ReadIntoMS(path, cancel: cts.Token);
             return G.WorldEditorData.DeserializeWD(ms);
-        }
-
-        private async Task<WorldAccessInfo> GetWorldAccessInfo()
-        {
-            Cid path = await AccessInfoCid;
-
-            if(path == null) return null;
-
-            using CancellationTokenSource cts = new(4000);
-            using MemoryStream ms = await G.IPFSService.ReadIntoMS(path, cancel: cts.Token);
-
-            return Core.WorldAccessInfo.Deserialize(ms.ToArray());
         }
 
         private async Task<AssetBundle> GetAssetBundle()

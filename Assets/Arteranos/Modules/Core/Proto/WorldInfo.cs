@@ -13,7 +13,7 @@ namespace Arteranos.Core
     [ProtoContract]
     public class WorldInfo
     {
-        [ProtoMember(1)]
+        // [ProtoMember(1)] - Unnecessary, Cid is available locally
         public string WorldCid;
 
         [ProtoMember(2)]
@@ -44,5 +44,7 @@ namespace Arteranos.Core
         [ProtoMember(10)]
         public UserID Author;
 
+        [ProtoMember(11)]
+        public WorldAccessInfo AccessInfo;
     }
 }

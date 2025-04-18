@@ -36,7 +36,50 @@ namespace Arteranos.WorldEdit
         [ProtoMember(2)]
         public List<WorldObject> objects;
 
+        [ProtoMember(3)]
+        public byte[] signature;
+
         public WorldInfo Info { get => info; set => info = value; }
+
+        public void Serialize(MemoryStream stream)
+        {
+            if (info.Author != G.Client.MeUserID)
+                throw new InvalidDataException("Cannot serialize: Author mismatch");
+
+            signature = null;
+            Serializer.Serialize(stream, this);
+            stream.Position = 0;
+            Client.Sign(stream.ToArray(), out signature);
+
+            Serializer.Serialize(stream, this);
+            stream.Flush();
+        }
+
+        public static WorldDecoration Deserialize(Stream stream)
+        {
+            WorldDecoration wd = Serializer.Deserialize<WorldDecoration>(stream);
+            byte[] signature = wd.signature;
+
+            if(signature == null)
+            {
+                Debug.LogWarning("Decorated world has no signature - old style Public Domain");
+            }
+            else
+            {
+                using MemoryStream ms = new();
+
+                wd.signature = null;
+                Serializer.Serialize(ms, wd);
+
+                wd.info.Author.SignPublicKey.Verify(ms.ToArray(), signature);
+
+                wd.signature = signature;
+            }
+
+            return wd;
+        }
+
+
         public IEnumerator BuildWorld()
         {
             Transform t = WorldEditorData.FindObjectByPath(null);

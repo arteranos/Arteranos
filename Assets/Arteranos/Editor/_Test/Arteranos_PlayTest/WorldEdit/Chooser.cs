@@ -54,7 +54,7 @@ namespace Arteranos.PlayTest.WorldEdit
             GameObject editorUIBlueprint = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Arteranos/Modules/WorldEdit/UI/WorldEditorUI.prefab");
             editorUI = Object.Instantiate(editorUIBlueprint, canvas.transform, false);
 
-            WorldObjectList list = editorUI.GetComponent<WorldEditorUI>().WorldObjectList;
+            WorldObjectList list = editorUI.GetComponent<WorldEditorUI>().ObjectList;
 
             ItemContainer = list.transform.GetChild(1);
 

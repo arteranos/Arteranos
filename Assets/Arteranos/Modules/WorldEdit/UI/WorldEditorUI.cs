@@ -15,18 +15,20 @@ namespace Arteranos.WorldEdit
 {
     public class WorldEditorUI : ActionPage
     {
-        public WorldObjectList WorldObjectList;
-        public PropertyPanel PropertyPanel;
-        public NewObjectPicker NewObjectPicker;
-        public SaveWorldPanel SaveWorldPanel;
+        [SerializeField] private WorldObjectList WorldObjectList;
+        [SerializeField] private PropertyPanel PropertyPanel;
+        [SerializeField] private NewObjectPicker NewObjectPicker;
+        [SerializeField] private SaveWorldPanel SaveWorldPanel;
 
-        public Button btn_UILock;
-        public Button btn_UIUnlock;
-        public Button btn_AddNew;
-        public Button btn_Undo;
-        public Button btn_Redo;
-        public Button btn_Paste;
-        public Button btn_Save;
+        [SerializeField] private Button btn_UILock;
+        [SerializeField] private Button btn_UIUnlock;
+        [SerializeField] private Button btn_AddNew;
+        [SerializeField] private Button btn_Undo;
+        [SerializeField] private Button btn_Redo;
+        [SerializeField] private Button btn_Paste;
+        [SerializeField] private Button btn_Save;
+
+        public WorldObjectList ObjectList => WorldObjectList;
 
         private CameraUITracker Tracker = null;
 

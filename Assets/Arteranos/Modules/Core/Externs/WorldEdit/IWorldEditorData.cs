@@ -34,6 +34,7 @@ namespace Arteranos.WorldEdit
         string WorldDescription { get; set; }
         ServerPermissions ContentWarning { get; set; }
         byte[] PasteBuffer { get; set; }
+        WorldAccessInfo WorldAccessInfo { get; set; }
 
         event Action<bool> OnEditorModeChanged;
         event Action<IWorldChange> OnWorldChanged;

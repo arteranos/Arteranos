@@ -32,8 +32,10 @@ namespace Arteranos.WorldEdit
         [SerializeField] private Spinner spn_addUser;
         [SerializeField] private Button btn_addUser;
 
+        private WorldAccessInfo accessInfo => G.WorldEditorData.WorldAccessInfo;
+
         private string titlePattern = null;
-        private WorldAccessInfo accessInfo = null;
+
         private List<ACLEntry> aclEntries = null;
         private List<UserID> usersToAdd = null;
 
@@ -65,21 +67,19 @@ namespace Arteranos.WorldEdit
 
                 yield return world.WorldInfo.WaitFor();
 
-                if (titlePattern == null) titlePattern = lbl_title.text;
+                titlePattern ??= lbl_title.text;
 
-                string id = G.World?.Name ?? "Nowhere";
                 WorldInfo info = world.WorldInfo;
 
                 lbl_title.text = string.Format(titlePattern, info.WorldName, (string)info.Author);
-
-                // If there isn't one, create a new one
-                accessInfo = accessInfo ?? WorldAccessInfo.Create(info.Author);
 
                 spn_DefaultPermission.value = (int)accessInfo.DefaultLevel;
 
                 RebuildACLView();
 
                 RebuildPossibleUsers();
+
+                obc_CustomPermissions.ShowPage(0);
             }
 
             StartCoroutine(Cor());
@@ -92,7 +92,7 @@ namespace Arteranos.WorldEdit
 
         private void RebuildACLView()
         {
-            if (accessInfo.UserALs == null) accessInfo.UserALs = new();
+            accessInfo.UserALs ??= new();
 
             // Sort names. OrderedDictionary is not available for us.
             List<UserID> list = accessInfo.UserALs.Keys.ToList();

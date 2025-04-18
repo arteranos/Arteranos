@@ -31,8 +31,8 @@ namespace Arteranos.Core
         [ProtoMember(6)]
         public ServerPermissions ContentRating;
 
-        [ProtoMember(7)]
-        public byte[] Signature;
+        //[ProtoMember(7)]
+        //public byte[] Signature;
 
         //[ProtoMember(8)]
         //[Obsolete("Retired, separate file")]

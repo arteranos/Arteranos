@@ -39,6 +39,9 @@ MonoBehaviour:
   - Id: worldEditor
     ActionGameObject: {fileID: 1086117836738361552, guid: c57a2b340e1b8dd40ab9ccc6d88106a2,
       type: 3}
+  - Id: worldPermissionsEditor
+    ActionGameObject: {fileID: 4208823780048290201, guid: c9177c68d7364f74d830a62edbb6daf1,
+      type: 3}
   - Id: embedded.worldEditor.addNew
     ActionGameObject: {fileID: 0}
   - Id: embedded.worldEditor.properties

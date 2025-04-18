@@ -26,22 +26,24 @@ namespace Arteranos.WorldEdit
 {
     public class SaveWorldPanel : ActionPage
     {
-        public Button btn_ReturnToList;
-        public TextMeshProUGUI lbl_Author;
-        public TextMeshProUGUI lbl_Template;
-        public TMP_InputField txt_WorldName;
-        public TMP_InputField txt_WorldDescription;
+        [SerializeField] private Button btn_ReturnToList;
+        [SerializeField] private TextMeshProUGUI lbl_Author;
+        [SerializeField] private TextMeshProUGUI lbl_Template;
+        [SerializeField] private TMP_InputField txt_WorldName;
+        [SerializeField] private TMP_InputField txt_WorldDescription;
 
-        public Toggle chk_Violence;
-        public Toggle chk_Nudity;
-        public Toggle chk_Suggestive;
-        public Toggle chk_ExViolence;
-        public Toggle chk_ExNudity;
+        [SerializeField] private Toggle chk_Violence;
+        [SerializeField] private Toggle chk_Nudity;
+        [SerializeField] private Toggle chk_Suggestive;
+        [SerializeField] private Toggle chk_ExViolence;
+        [SerializeField] private Toggle chk_ExNudity;
 
-        public Button btn_SaveAsZip;
-        public Button btn_SaveInGallery;
+        [SerializeField] private Button btn_Permissions;
 
-        public GameObject bp_ScreenshotCamera;
+        [SerializeField] private Button btn_SaveAsZip;
+        [SerializeField] private Button btn_SaveInGallery;
+
+        [SerializeField] private GameObject bp_ScreenshotCamera;
 
         private string templatePattern;
         private string worldTemplateCid;
@@ -49,7 +51,6 @@ namespace Arteranos.WorldEdit
         private GameObject ScreenshotCamera;
         private bool needUpdateTag = false;
 
-        private UserID WorldAuthor;
         private WorldAccessInfo WorldAccessInfo;
 
         protected override void Awake()
@@ -76,11 +77,10 @@ namespace Arteranos.WorldEdit
             chk_ExNudity.onValueChanged.AddListener(
                 b => GotCWChanged(b, ref G.WorldEditorData.ContentWarning.ExplicitNudes));
 
+            btn_Permissions.onClick.AddListener(GotPermissionClick);
 
             G.NetworkStatus.OnNetworkStatusChanged += GotNetworkStatusChange;
         }
-
-        private void GotCWChanged(bool b, ref bool? cwItem) => cwItem = b;
 
         protected override void Start()
         {
@@ -89,10 +89,17 @@ namespace Arteranos.WorldEdit
 
         protected override void OnDestroy()
         {
-            base.OnDestroy();
-
             G.NetworkStatus.OnNetworkStatusChanged -= GotNetworkStatusChange;
+
+            base.OnDestroy();
         }
+
+        private void GotPermissionClick()
+        {
+            ActionRegistry.Call("worldPermissionsEditor");
+        }
+
+        private void GotCWChanged(bool b, ref bool? cwItem) => cwItem = b;
 
         private void GotWorldNameChange(string name)
         {
@@ -136,8 +143,7 @@ namespace Arteranos.WorldEdit
                     WorldInfo worldInfo = World.WorldInfo;
 
                     // Retain the world authorship
-                    WorldAuthor = worldInfo.Author;
-                    WorldAccessInfo accessInfo = worldInfo.AccessInfo;
+                    WorldAccessInfo = worldInfo.AccessInfo;
 
                     worldTemplateCid = templateInfo.WorldCid;
                     lbl_Author.text = worldInfo.Author;
@@ -275,23 +281,15 @@ namespace Arteranos.WorldEdit
                 worldName = $"{worldName} (updated {nowStr})";
             }
 
-            // TODO Move WorldAccessInfo holding to WorldEditorData
-            // Null WAI means Public Domain, like templates. Building world up from a template means taking ownership.
-            if(WorldAccessInfo == null)
-            {
-                WorldAuthor = G.Client.MeUserID;
-                WorldAccessInfo = WorldAccessInfo.Create(WorldAuthor);
-            }
-
             WorldInfo wi = new()
             {
-                Author = WorldAuthor,
+                Author = G.Client.MeUserID,
                 ContentRating = G.WorldEditorData.ContentWarning,
                 Created = DateTime.UtcNow,
                 WorldName = worldName,
                 WorldDescription = G.WorldEditorData.WorldDescription,
                 WorldCid = null, // Cannot create a self-reference, delay it to the WorldDownloader
-                AccessInfo = WorldAccessInfo,
+                AccessInfo = G.WorldEditorData.WorldAccessInfo,
             };
 
             WorldDecoration wd = new()
@@ -359,7 +357,7 @@ namespace Arteranos.WorldEdit
 
             // Add the decoration as a file
             using MemoryStream ms = new();
-            Serializer.Serialize(ms, decor);
+            decor.Serialize(ms);
             ms.Position = 0;
             IFileSystemNode fsnDecor = await G.IPFSService.AddStream(ms, "Decoration", cancel: cancel).ConfigureAwait(false);
             rootEntries.Add(fsnDecor.ToLink());

@@ -80,6 +80,9 @@ namespace Arteranos.WorldEdit
         // Content warnings
         public ServerPermissions ContentWarning { get; set; }
 
+        // World Access Info while editing
+        public WorldAccessInfo WorldAccessInfo { get; set; }
+
         // Paste Buffer
         public byte[] PasteBuffer { get; set; }
 
@@ -100,6 +103,8 @@ namespace Arteranos.WorldEdit
 
             if (KMWorldEditorActions == null) return;
 
+            UserID meUserID = G.Client.MeUserID;
+
             IWorldDecoration id = G.World.World?.DecorationContent.Result;
             WorldInfo info = id?.Info;
 
@@ -114,7 +119,7 @@ namespace Arteranos.WorldEdit
                     ExplicitNudes = false,
                 };
 
-                WorldName = $"{(string)G.Client.MeUserID}'s unnamed world";
+                WorldName = $"{(string)meUserID}'s unnamed world";
                 WorldDescription = "";
             }
             else
@@ -122,7 +127,11 @@ namespace Arteranos.WorldEdit
                 ContentWarning = info.ContentRating.Clone() as ServerPermissions;
                 WorldName = info.WorldName;
                 WorldDescription = info.WorldDescription;
+                WorldAccessInfo = info.AccessInfo;
             }
+
+            // Bare template or old style public domain - assume ownership
+            WorldAccessInfo ??= WorldAccessInfo.Create(meUserID);
 
             // React only to the up flank
             KMWorldEditorModeSelect.PerformCallback = DoModeSelect;
@@ -323,7 +332,7 @@ namespace Arteranos.WorldEdit
             => worldDecoration.BuildWorld();
 
         public IWorldDecoration DeserializeWD(Stream stream)
-            => Serializer.Deserialize<WorldDecoration>(stream);
+            => WorldDecoration.Deserialize(stream);
 
         #endregion
         // ---------------------------------------------------------------

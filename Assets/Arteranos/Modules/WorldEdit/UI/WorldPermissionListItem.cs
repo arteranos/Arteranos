@@ -30,6 +30,11 @@ namespace Arteranos.WorldEdit
             {
                 m_UserID = value;
                 lbl_Name.text = (string) m_UserID;
+
+                // Prevent pulling the rug under yourself
+                bool otherone = m_UserID != G.Client.MeUserID;
+                spn_Permission.enabled = otherone;
+                btn_Remove.interactable = otherone;
             }
         }
         public WorldAccessInfoLevel Permission

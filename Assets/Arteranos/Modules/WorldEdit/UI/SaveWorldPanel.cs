@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 using Ipfs;
 using System.Collections.Generic;
 using System.IO;
-using ProtoBuf;
 using System.Threading;
 using System.Collections;
 using Ipfs.Unity;
@@ -45,13 +44,13 @@ namespace Arteranos.WorldEdit
 
         [SerializeField] private GameObject bp_ScreenshotCamera;
 
+        [SerializeField] private TMP_Text lbl_NoPermissionsNotice;
+
         private string templatePattern;
         private string worldTemplateCid;
 
         private GameObject ScreenshotCamera;
         private bool needUpdateTag = false;
-
-        private WorldAccessInfo WorldAccessInfo;
 
         protected override void Awake()
         {
@@ -142,9 +141,6 @@ namespace Arteranos.WorldEdit
                     WorldInfo templateInfo = World.TemplateInfo;
                     WorldInfo worldInfo = World.WorldInfo;
 
-                    // Retain the world authorship
-                    WorldAccessInfo = worldInfo.AccessInfo;
-
                     worldTemplateCid = templateInfo.WorldCid;
                     lbl_Author.text = worldInfo.Author;
 
@@ -155,6 +151,10 @@ namespace Arteranos.WorldEdit
 
                 // As long as the user changes the name, we need the "updated" tag.
                 needUpdateTag = true;
+
+                bool canAdmin = G.WorldEditorData.WorldAccessInfo.CanAdmin(G.Client.MeUserID);
+                btn_Permissions.gameObject.SetActive(canAdmin);
+                lbl_NoPermissionsNotice.gameObject.SetActive(!canAdmin);
 
                 EnableSaveButtons();
 

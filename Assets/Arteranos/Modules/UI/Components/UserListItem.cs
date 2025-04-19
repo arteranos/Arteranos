@@ -82,23 +82,6 @@ namespace Arteranos.UI
             base.Start();
 
             UpdateCaption();
-
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
-            Cid Icon;
-
-            if (targetUser == null)
-            {
-                // Offline user, fetch icon from the social database
-                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(TargetUserID);
-                Icon = q.Any() ? q.First().Value.Icon : null;
-            }
-            else
-            {
-                // Online user, fetch icon directly from the avatar
-                Icon = targetUser.UserIcon;
-            }
-
-            img_Icon.Path = Icon;
         }
 
         private void UpdateCaption()
@@ -122,6 +105,8 @@ namespace Arteranos.UI
 
             lbl_caption.text = sb.ToString();
             this.server = LocationVisible ? server : null;
+
+            img_Icon.Path = (Cid)TargetUserID;
 
             // Spread spectrum, avoid peaks.
             updateDelay = UnityEngine.Random.Range(55, 70);
@@ -151,7 +136,7 @@ namespace Arteranos.UI
                 btn_Block.gameObject.SetActive(!blocked && !friends);
                 btn_Unblock.gameObject.SetActive(blocked && !friends);
 
-                // Connot send texts to offline users. They could want to deny them.
+                // Cannot send texts to offline users. They could want to deny them.
                 if (targetUser != null && G.Me != null)
                     btn_SendText.gameObject.SetActive(Utils.IsAbleTo(UserCapabilities.CanSendText, targetUser));
                 else

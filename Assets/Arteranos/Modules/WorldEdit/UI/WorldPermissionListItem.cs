@@ -12,6 +12,7 @@ using UnityEngine.EventSystems;
 using System;
 using Arteranos.UI;
 using Arteranos.Core;
+using Ipfs;
 
 namespace Arteranos.WorldEdit
 {
@@ -22,7 +23,6 @@ namespace Arteranos.WorldEdit
         [SerializeField] private Spinner spn_Permission;
         [SerializeField] private Button btn_Remove;
 
-        public string Icon => img_Icon.Path;
         public UserID UserID
         {
             get => m_UserID;
@@ -30,6 +30,7 @@ namespace Arteranos.WorldEdit
             {
                 m_UserID = value;
                 lbl_Name.text = (string) m_UserID;
+                img_Icon.Path = (Cid)m_UserID;
 
                 // Prevent pulling the rug under yourself
                 bool otherone = m_UserID != G.Client.MeUserID;

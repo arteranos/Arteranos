@@ -62,6 +62,9 @@ namespace Arteranos.Services
 
             [ProtoMember(5)]
             public PublicKey ClientAgreePublicKey;
+
+            [ProtoMember(6)]
+            public string UserIconCid;
         }
 
         internal struct AuthRequestMessage : NetworkMessage
@@ -327,7 +330,7 @@ namespace Arteranos.Services
 
                 ServerUserState query = new()
                 {
-                    userID = new UserID(request.ClientSignPublicKey, request.Nickname),
+                    userID = new UserID(request.ClientSignPublicKey, request.Nickname, request.UserIconCid),
                     address = conn.address,
                     deviceUID = request.deviceUID
                 };
@@ -526,7 +529,8 @@ namespace Arteranos.Services
                 Nickname = cs.Me.Nickname,
                 deviceUID = SystemInfo.deviceUniqueIdentifier,
                 ClientSignPublicKey = cs.UserSignPublicKey,
-                ClientAgreePublicKey = cs.UserAgrPublicKey
+                ClientAgreePublicKey = cs.UserAgrPublicKey,
+                UserIconCid = cs.Me.UserIconCid
             };
 
             using MemoryStream ms = new();

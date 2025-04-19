@@ -368,7 +368,7 @@ namespace Arteranos.Core
         public PublicKey UserAgrPublicKey => CMH.AgreePublicKey;
 
         [JsonIgnore]
-        public UserID MeUserID => new(UserSignPublicKey, Me.Nickname);
+        public UserID MeUserID => new(UserSignPublicKey, Me.Nickname, Me.UserIconCid);
 
         [JsonIgnore]
         public override bool VRMode

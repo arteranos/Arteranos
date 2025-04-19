@@ -1,4 +1,5 @@
-﻿using Ipfs.Cryptography.Proto;
+﻿using Ipfs;
+using Ipfs.Cryptography.Proto;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,9 @@ namespace Arteranos.Core
         [ProtoMember(2)]
         public string Nickname = null;
 
+        [ProtoMember(3)]
+        public string IconCid = null;
+
         public UserID()
         {
 
@@ -28,6 +32,13 @@ namespace Arteranos.Core
         {
             this.SignPublicKey = SignPublicKey;
             this.Nickname = Nickname;
+        }
+
+        public UserID(PublicKey SignPublicKey, string Nickname, string IconCid)
+        {
+            this.SignPublicKey = SignPublicKey;
+            this.Nickname = Nickname;
+            this.IconCid = IconCid;
         }
 
         public byte[] Serialize()
@@ -52,6 +63,8 @@ namespace Arteranos.Core
         public static implicit operator PublicKey(UserID userID) => userID?.SignPublicKey;
 
         public static implicit operator string(UserID userID) => userID?.Nickname;
+
+        public static explicit operator Cid(UserID userID) => (userID?.IconCid != null) ? Cid.Decode(userID.IconCid) : null;
 
         public override bool Equals(object obj) => Equals(obj as UserID);
         public override int GetHashCode()

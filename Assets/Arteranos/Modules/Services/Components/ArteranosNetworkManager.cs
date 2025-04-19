@@ -232,7 +232,7 @@ namespace Arteranos.Services
                 ResponseMessages.Remove(conn.connectionId);
 
                 brain.UserState = seq.response.UserState;
-                brain.UserID = new UserID(seq.request.ClientSignPublicKey, seq.request.Nickname);
+                brain.UserID = new UserID(seq.request.ClientSignPublicKey, seq.request.Nickname, seq.request.UserIconCid);
                 brain.Address = conn.address;
                 brain.DeviceID = seq.request.deviceUID;
                 brain.AgreePublicKey = seq.request.ClientAgreePublicKey;
@@ -412,12 +412,9 @@ namespace Arteranos.Services
 
         public void EmitToServerCTSPacket(CTSPacket packet)
         {
-            Client client = G.Client;
-            UserID sender = new(client.UserSignPublicKey, client.Me.Nickname);
-
             if (!NetworkClient.active)
                 // Directly slice the packet into the server logic
-                ServerLocalCTSPacket(sender, packet);
+                ServerLocalCTSPacket(G.Client.MeUserID, packet);
             else if (G.NetworkStatus.IsClientConnected)
             {
                 // Sign, encrypt and send it off to the connected server

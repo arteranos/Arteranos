@@ -40,7 +40,7 @@ namespace Arteranos.UI
 
             Client cs = G.Client;
             TypeConverter typeConverter = new UserIDConverter();
-            UserID userID = new(cs.UserSignPublicKey, cs.Me.Nickname);
+            UserID userID = cs.MeUserID;
             string publicUIDstring = (string) typeConverter.ConvertTo(userID, typeof(string));
 
             lbl_Version.text = v.Full;

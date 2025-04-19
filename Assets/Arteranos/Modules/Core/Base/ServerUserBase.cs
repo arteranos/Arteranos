@@ -238,7 +238,7 @@ namespace Arteranos.Core
                 return;
             }
 
-            UserID userID = new(cs.UserSignPublicKey, cs.Me.Nickname);
+            UserID userID = cs.MeUserID;
             ServerUserState user = new()
             {
                 userID = userID,

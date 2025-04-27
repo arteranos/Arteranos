@@ -8,6 +8,7 @@
 using Arteranos.WorldEdit;
 using Ipfs;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -75,6 +76,13 @@ namespace Arteranos.Core.Managed
         /// The world decoration's content
         /// </summary>
         public readonly AsyncLazy<IWorldDecoration> DecorationContent;
+
+        public IEnumerator WaitForEssentials()
+        {
+            yield return TemplateContent.WaitFor();
+            yield return DecorationContent.WaitFor();
+            yield return WorldInfo.WaitFor();
+        }
 
         public async Task<bool> IsFullWorld() => await DecorationCid != null;
 

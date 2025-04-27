@@ -669,12 +669,11 @@ namespace Arteranos.Services
             {
                 world.OnReportingProgress += ReportProgress;
 
-                yield return world.TemplateContent.WaitFor();
-                yield return world.DecorationContent.WaitFor();
+                yield return world.WaitForEssentials();
 
                 world.OnReportingProgress -= ReportProgress;
 
-                if ((UnityEngine.AssetBundle) world.TemplateContent.Result == null)
+                if ((UnityEngine.AssetBundle)world.TemplateContent.Result == null)
                 {
                     EmitToClientCTSPacket(new CTSMessage()
                     {
@@ -717,8 +716,7 @@ namespace Arteranos.Services
             {
                 world.OnReportingProgress += ReportProgress;
 
-                yield return world.TemplateContent.WaitFor();
-                yield return world.DecorationContent.WaitFor();
+                yield return world.WaitForEssentials();
 
                 world.OnReportingProgress -= ReportProgress;
 

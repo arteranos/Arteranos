@@ -84,6 +84,31 @@ namespace Arteranos.Core.Managed
             yield return WorldInfo.WaitFor();
         }
 
+        public bool CanView(UserID userID)
+        {
+            WorldInfo info = WorldInfo;
+            return info.AccessInfo?.CanView(userID) ?? true;
+        }
+
+        public bool CanPin(UserID userID)
+        {
+            WorldInfo info = WorldInfo;
+            return info.AccessInfo?.CanPin(userID) ?? true;
+        }
+
+        public bool CanEdit(UserID userID)
+        {
+            WorldInfo info = WorldInfo;
+            return info.AccessInfo?.CanEdit(userID) ?? true;
+        }
+
+        public bool CanAdmin(UserID userID)
+        {
+            WorldInfo info = WorldInfo;
+            return info.AccessInfo?.CanAdmin(userID) ?? false;
+        }
+
+
         public async Task<bool> IsFullWorld() => await DecorationCid != null;
 
 

@@ -22,6 +22,7 @@ using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace Arteranos.Editor
 {
@@ -97,8 +98,8 @@ namespace Arteranos.Editor
 
         public static void UpdateLicenseFiles()
         {
-            File.Copy("LICENSE.md", "Assets\\Generated\\Resources\\LICENSE.md", true);
-            File.Copy("Third Party Notices.md", "Assets\\Generated\\Resources\\Third Party Notices.md", true);
+            File.Copy("LICENSE.md", "Assets/Generated/Resources/LICENSE.md", true);
+            File.Copy("Third Party Notices.md", "Assets/Generated/Resources/Third Party Notices.md", true);
 
             AssetDatabase.Refresh();
         }
@@ -210,7 +211,10 @@ namespace Arteranos.Core
         public static void RunClientIPFSDaemon()
         {
             string RepoDir = $"{Application.persistentDataPath}/.ipfs";
-            string IPFSExePath = $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe";
+            string IPFSExePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe"
+                : $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/arteranos/arteranos/ipfs";
+
 
             string argLine = $"--repo-dir={RepoDir} daemon --enable-pubsub-experiment";
 
@@ -224,6 +228,8 @@ namespace Arteranos.Core
             };
 
             process.Start();
+
+            Debug.Log($"Starting {IPFSExePath}");
         }
 
         [MenuItem("Arteranos/Build/Build Installation Package (Linux)", false, 81)]

@@ -23,6 +23,7 @@ using ICSharpCode.SharpZipLib.Tar;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace Arteranos.Editor
 {
@@ -161,6 +162,8 @@ namespace Arteranos.Core
             static IEnumerator SingleTask()
             {
                 GetProjectGitVersion();
+                yield return BuildLinux64Coroutine();
+
                 yield return BuildLinux64DSCoroutine();
 
                 yield return BuildWin64DSCoroutine();
@@ -195,6 +198,18 @@ namespace Arteranos.Core
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
         }
 
+        [MenuItem("Arteranos/Build/Build Linux64", false, 155)]
+        public static void BuildLinux64()
+        {
+            static IEnumerator SingleTask()
+            {
+                GetProjectGitVersion();
+                yield return BuildLinux64Coroutine();
+            }
+
+            EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
+        }
+
         [MenuItem("Arteranos/Build/Build Linux64 Dedicated Server", false, 160)]
         public static void BuildLinux64DedServ()
         {
@@ -211,10 +226,6 @@ namespace Arteranos.Core
         public static void RunClientIPFSDaemon()
         {
             string RepoDir = $"{Application.persistentDataPath}/.ipfs";
-            string IPFSExePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe"
-                : $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/arteranos/arteranos/ipfs";
-
 
             string argLine = $"--repo-dir={RepoDir} daemon --enable-pubsub-experiment";
 
@@ -232,12 +243,32 @@ namespace Arteranos.Core
             Debug.Log($"Starting {IPFSExePath}");
         }
 
+        private static string IPFSExePath
+        {
+            get {
+                return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                    ? $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe"
+                    : $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/arteranos/arteranos/ipfs";
+            }
+        }
+
         [MenuItem("Arteranos/Build/Build Installation Package (Linux)", false, 81)]
         public static void BuildLinuxInstallationPackage()
         {
             static IEnumerator SingleTask()
             {
                 yield return BuildDebianPackageCoroutine();
+            }
+
+            EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
+        }
+
+        [MenuItem("Arteranos/Build/Build Tarball Hashes", false, 82)]
+        public static void BuildTarballSums()
+        {
+            static IEnumerator SingleTask()
+            {
+                yield return CreateTarballShaSums();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
@@ -271,6 +302,16 @@ namespace Arteranos.Core
             });
         }
 
+        private static IEnumerator BuildLinux64Coroutine()
+        {
+
+            yield return CommenceBuild(new BuildPlayerOptions()
+            {
+                target = BuildTarget.StandaloneLinux64,
+                subtarget = (int)StandaloneBuildSubtarget.Player,
+            });
+        }
+
         private static IEnumerator BuildLinux64DSCoroutine()
         {
 
@@ -281,7 +322,7 @@ namespace Arteranos.Core
             });
         }
 
-        private static IEnumerator Execute(string command, string argline, string cwd = "build")
+        private static IEnumerator Execute(string command, string argline, string cwd = "build", Action<string> stdoutCallback = null)
         {
             ProcessStartInfo psi = new()
             {
@@ -303,7 +344,26 @@ namespace Arteranos.Core
             string data = reader.ReadToEnd();
             Debug.Log(data);
 
+            stdoutCallback?.Invoke(data);
+
             yield return null;
+        }
+
+        public static IEnumerator CreateTarballShaSums()
+        {
+            string sums = null;
+            string[] files = Directory.GetFiles("build", "*.gz");
+
+            files = (
+                from file in files
+                select Path.GetFileName(file)
+            ).ToArray();
+            
+            string fileargs = $"{string.Join(" ", files)}";
+
+            yield return Execute("sha256sum", fileargs, stdoutCallback: str => sums = str);
+
+            File.WriteAllText("build/SHA256SUMS", sums);
         }
 
         public static IEnumerator BuildDebianPackageCoroutine()
@@ -467,8 +527,6 @@ namespace Arteranos.Core
 
             IEnumerator HashEntriesChunk(StringBuilder fileArgs, string rootPath)
             {
-                string IPFSExePath = $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe";
-
                 ProcessStartInfo psi = new()
                 {
                     FileName = IPFSExePath,

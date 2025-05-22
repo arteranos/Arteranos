@@ -19,9 +19,6 @@ using Arteranos.Avatar;
 using System.Linq;
 using Ipfs;
 using System.Net;
-using System.Threading;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Net.NetworkInformation;
 using Arteranos.Core.Managed;
 using System.Runtime.InteropServices;
@@ -361,59 +358,15 @@ namespace Arteranos.Services
 
         public static async Task<IPAddress> GetExternalIPAdress()
         {
-            CancellationTokenSource cts = null;
-            IPAddress result = null;
-            using HttpClient webclient = new();
-
-            async Task<IPAddress> GetMyIPAsync(string service, CancellationToken cancel)
+            try
             {
-                try
-                {
-                    HttpResponseMessage response = await webclient.GetAsync(service, cancel);
-                    string ipString = await response.Content.ReadAsStringAsync();
-
-                    // https://ihateregex.io/expr/ip
-                    Match m = Regex.Match(ipString, @"(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}");
-
-                    return m.Success ? IPAddress.Parse(m.Value) : null;
-                }
-                catch { }
+                string ipstr = await G.IPFSService.GetConfigItem<string>("X-Arteranos.ExternalIPv4Address");
+                return IPAddress.Parse(ipstr);
+            }
+            catch (Exception)
+            {
                 return null;
             }
-
-            
-            // Services from https://stackoverflow.com/questions/3253701/get-public-external-ip-address
-            List<string> services = new()
-            {
-                "https://ipv4.icanhazip.com",
-                "https://api.ipify.org",
-                "https://ipinfo.io/ip",
-                "https://checkip.amazonaws.com",
-                "https://wtfismyip.com/text",
-                "http://icanhazip.com"
-            };
-
-            // Spread the load throughout on all of the services.
-            services.Shuffle();
-
-            cts = new CancellationTokenSource(10000);
-
-            async Task GetOneMyIP(string service)
-            {
-                if (result != null || cts.Token.IsCancellationRequested) return;
-                result = await GetMyIPAsync(service, cts.Token);
-
-                if (result != null) cts.Cancel();
-            }
-
-            TaskPool<string> pool = new(6);
-
-            foreach (string service in services)
-                pool.Schedule(service, GetOneMyIP);
-
-            await pool.Run(cts.Token);
-
-            return result;
         }
 
 #endregion

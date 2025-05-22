@@ -243,6 +243,27 @@ namespace Arteranos.Core
             Debug.Log($"Starting {IPFSExePath}");
         }
 
+        [MenuItem("Arteranos/Run/Run Server's IPFS daemon", false, 21)]
+        public static void RunServerIPFSDaemon()
+        {
+            string RepoDir = $"{Application.persistentDataPath}_DedicatedServer/.ipfs";
+
+            string argLine = $"--repo-dir={RepoDir} daemon --enable-pubsub-experiment";
+
+            Process process = new()
+            {
+                StartInfo = new()
+                {
+                    FileName = IPFSExePath,
+                    Arguments = argLine,
+                }
+            };
+
+            process.Start();
+
+            Debug.Log($"Starting {IPFSExePath}");
+        }
+
         private static string IPFSExePath
         {
             get {

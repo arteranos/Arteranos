@@ -26,6 +26,7 @@ using Arteranos.Core.Operations;
 using Ipfs.CoreApi;
 using Debug = UnityEngine.Debug;
 using System.Collections.Concurrent;
+using Newtonsoft.Json.Linq;
 
 
 namespace Arteranos.Services
@@ -219,7 +220,7 @@ namespace Arteranos.Services
 
             }
 
-            if(EnableUploadDefaultAvatars)
+            if (EnableUploadDefaultAvatars)
             {
                 yield return UploadAvatar("resource:///Avatar/6394c1e69ef842b3a5112221.glb");
                 G.DefaultAvatar.Male = cid;
@@ -259,7 +260,7 @@ namespace Arteranos.Services
             if (!ServerDescriptionQueue.Contains(path))
                 ServerDescriptionQueue.Enqueue(path);
         }
-        public void BumpServerOnlineData() 
+        public void BumpServerOnlineData()
         {
             ServerOnlineDataLatch = true;
         }
@@ -350,7 +351,7 @@ namespace Arteranos.Services
                 return peers.Count();
             }
 
-            while(true)
+            while (true)
             {
                 if (IdentifyCid == null)
                 {
@@ -391,7 +392,7 @@ namespace Arteranos.Services
                     using CancellationTokenSource timeoutToken = new(5000);
                     using CancellationTokenSource cts_dsd = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, timeoutToken.Token);
 
-                    if(path.StartsWith("/ipns/"))
+                    if (path.StartsWith("/ipns/"))
                     {
                         guessedPeerID = path[6..];
                         path = await ResolveToCid(path, cancel: cts_dsd.Token);
@@ -443,17 +444,17 @@ namespace Arteranos.Services
                 }
             }
 
-            while(true)
+            while (true)
             {
                 // Initial flood mitigation
-                if(numDownloading >= 5) continue;
-                
-                if(ServerDescriptionQueue.TryDequeue(out string toDownload))
+                if (numDownloading >= 5) continue;
+
+                if (ServerDescriptionQueue.TryDequeue(out string toDownload))
                 {
                     _ = Task.Run(() => DownloadServerDescription(toDownload, null));
                     yield return null;
                 }
-                else 
+                else
                     yield return new WaitForSeconds(1);
             }
         }
@@ -481,7 +482,7 @@ namespace Arteranos.Services
                 }
 
                 List<IPAddress> addrs = G.NetworkStatus?.IPAddresses;
-                if(addrs == null || addrs.Count == 0)
+                if (addrs == null || addrs.Count == 0)
                 {
                     yield return new WaitForEndOfFrame();
                     continue;
@@ -492,8 +493,8 @@ namespace Arteranos.Services
                                                  select user.UserID.Fingerprint).ToList();
 
                 List<string> addrstrs = (from entry in addrs
-                                        where entry != null
-                                        select entry.ToString()).ToList();
+                                         where entry != null
+                                         select entry.ToString()).ToList();
 
                 ServerOnlineData sod = new()
                 {
@@ -523,7 +524,7 @@ namespace Arteranos.Services
 
                 yield return new WaitUntil(() =>
                     t.IsCompleted &&
-                        ((ServerOnlineDataLatch && DateTime.UtcNow > earliestEmitting) 
+                        ((ServerOnlineDataLatch && DateTime.UtcNow > earliestEmitting)
                         || DateTime.UtcNow > latestEmitting)
                 );
 
@@ -620,7 +621,7 @@ namespace Arteranos.Services
 
         }
 
-#endregion
+        #endregion
         // ---------------------------------------------------------------
         #region Peer communication and data exchange
 
@@ -641,7 +642,7 @@ namespace Arteranos.Services
                 using MemoryStream ms = new(message.DataBytes);
                 PeerMessage pm = PeerMessage.Deserialize(ms);
 
-                if(pm is IDirectedPeerMessage dm)
+                if (pm is IDirectedPeerMessage dm)
                 {
                     if (dm.ToPeerID != self.Id.ToString())
                     {
@@ -658,7 +659,7 @@ namespace Arteranos.Services
                     sod.LastOnline = DateTime.UtcNow; // Not serialized
                     sod.DBInsert(SenderPeerID.ToString());
 
-                    if(sod.CurrentWorldCid == null && sod.UserFingerprints == null)
+                    if (sod.CurrentWorldCid == null && sod.UserFingerprints == null)
                     {
                         G.Community.DownServer(SenderPeerID);
                     }
@@ -678,7 +679,7 @@ namespace Arteranos.Services
                 else
                     Debug.LogWarning($"Discarding unknown message from {SenderPeerID}");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.LogException(e);
             }
@@ -725,7 +726,7 @@ namespace Arteranos.Services
                 try
                 {
                     // Report rate throttling
-                    if(lastreported < totalBytes - buffer.Length)
+                    if (lastreported < totalBytes - buffer.Length)
                     {
                         reportProgress?.Invoke(totalBytes);
                         lastreported = totalBytes;
@@ -777,6 +778,29 @@ namespace Arteranos.Services
         public async Task<FileSystemNode> CreateDirectory(IEnumerable<IFileSystemLink> links, bool pin = true, CancellationToken cancel = default)
             => await Ipfs.FileSystemEx.CreateDirectoryAsync(links, pin, cancel).ConfigureAwait(false);
 
+        public async Task<T> GetConfigItem<T>(string key, CancellationToken cancel = default)
+        {
+            string configfile = $"{ConfigUtils.persistentDataPath}/.ipfs/config";
+
+
+            using Stream s = File.OpenRead(configfile);
+            using StreamReader sr = new(s);
+            string json = await sr.ReadToEndAsync();
+
+            JObject jo = JObject.Parse(json);
+
+            string[] keys = key.Split('.');
+
+            JToken c = jo[keys[0]];
+
+            for (int i = 1; i < keys.Length; i++)
+            {
+                string item = keys[i];
+                c = c[item];
+            }
+
+            return c.Value<T>();
+        }
         #endregion
     }
 }

@@ -184,14 +184,7 @@ namespace Arteranos.UI
             HUDButtons[btn_callcd].Button.gameObject.SetActive(!cameraCalled);
             HUDButtons[btn_takephoto].Button.gameObject.SetActive(cameraCalled);
             HUDButtons[btn_dismisscd].Button.gameObject.SetActive(cameraCalled);
-            HUDButtons[btn_editworld].Button.gameObject.SetActive(Utils.IsAbleTo(Social.UserCapabilities.CanEditWorld, null)
-
-//#if !UNITY_EDITOR
-                // Attemping to edit a world without a template.
-                // In the Unity Editor, it's just for fiddling/testing.
-                && G.World.Cid != null
-//#endif
-                );
+            HUDButtons[btn_editworld].Button.gameObject.SetActive(G.World.World != null && G.World.World.CanEdit(G.Client.MeUserID));
         }
 
         private void DownloadUserHUDSettings(UserHUDSettingsJSON obj)

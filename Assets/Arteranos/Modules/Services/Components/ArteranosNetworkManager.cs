@@ -574,15 +574,11 @@ namespace Arteranos.Services
 
         #endregion
         // ---------------------------------------------------------------
-        #region Pre World transition (all)
+        #region World transition (all)
         private void ClientAnnounceStartOfWorldTransition()
         {
             TransitionProgress.InitPreWorldTransition();
         }
-
-        #endregion
-        // ---------------------------------------------------------------
-        #region World Teansition (all)
 
         private static void ReportProgress(long bytes, long totalBytes)
         {
@@ -719,8 +715,10 @@ namespace Arteranos.Services
                 yield return world.WaitForEssentials();
 
                 world.OnReportingProgress -= ReportProgress;
+                
+                // CanView check? No. Potential of abuse for mass kicks by loading a heavily restricted worlds.
 
-                if ((UnityEngine.AssetBundle) world.TemplateContent.Result == null)
+                if ((UnityEngine.AssetBundle)world.TemplateContent.Result == null)
                 {
                     yield return ShowDialogCoroutine($"Error in loading world '{world.RootCid}' - disconnecting");
 

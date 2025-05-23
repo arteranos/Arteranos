@@ -328,9 +328,17 @@ namespace Arteranos.Services
                     ServerSettings = new ServerJSON(G.Server)
                 };
 
+                UserID userID = new(request.ClientSignPublicKey, request.Nickname, request.UserIconCid);
+
+                if (G.World.World != null && !G.World.World.CanView(userID))
+                {
+                    response.status = HttpStatusCode.Forbidden;
+                    response.message = "This server's world is not viewable for you.";
+                }
+
                 ServerUserState query = new()
                 {
-                    userID = new UserID(request.ClientSignPublicKey, request.Nickname, request.UserIconCid),
+                    userID = userID,
                     address = conn.address,
                     deviceUID = request.deviceUID
                 };

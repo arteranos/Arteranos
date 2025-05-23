@@ -102,7 +102,9 @@ namespace Arteranos.UI
                 && AllowedForThis
                 && !G.World.ChangeInProgress);
 
-            btn_Add.gameObject.SetActive(!World.IsFavourited);
+            bool pinnable = !World.IsFavourited && World.CanPin(G.Client.MeUserID);
+            
+            btn_Add.gameObject.SetActive(pinnable);
             btn_Delete.gameObject.SetActive(World.IsFavourited);
 
             string lvstr = (World.LastSeen == DateTime.MinValue)

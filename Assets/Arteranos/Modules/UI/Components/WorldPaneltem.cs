@@ -30,6 +30,7 @@ namespace Arteranos.UI
         public int ServersCount { get; internal set; } = 0;
         public int UsersCount { get; internal set; } = 0;
         public int FriendsMax { get; internal set; } = 0;
+        public bool Hidden { get; internal set; } = false;
 
         private bool AllowedForThis = true;
         private string patternCaption = null;
@@ -74,6 +75,13 @@ namespace Arteranos.UI
                     yield break;
                 }
 
+                if (!World.CanView(G.Client.MeUserID))
+                {
+                    Hidden = true;
+                    lbl_Caption.text = "(not viewable)";
+                    yield break;
+                }
+
                 WorldInfo worldInfo = World.WorldInfo;
                 ServerPermissions permission = worldInfo.ContentRating;
                 AllowedForThis = permission != null && !permission.IsInViolation(SettingsManager.ActiveServerData.Permissions);
@@ -103,7 +111,7 @@ namespace Arteranos.UI
                 && !G.World.ChangeInProgress);
 
             bool pinnable = !World.IsFavourited && World.CanPin(G.Client.MeUserID);
-            
+
             btn_Add.gameObject.SetActive(pinnable);
             btn_Delete.gameObject.SetActive(World.IsFavourited);
 

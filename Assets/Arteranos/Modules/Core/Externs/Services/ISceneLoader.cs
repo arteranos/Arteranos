@@ -13,6 +13,6 @@ namespace Arteranos.Services
     public interface ISceneLoader
     {
         IEnumerator LoadScene(string name);
-        IEnumerator LoadScene(AssetBundle loadedAB, bool doUnload = true);
+        IEnumerator LoadScene(AssetBundle loadedAB, bool isFallback, bool doUnload);
     }
 }

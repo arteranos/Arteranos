@@ -35,10 +35,12 @@ namespace Arteranos.Core.Managed
         { }
 
         public static implicit operator UnityEngine.AssetBundle(AssetBundle assetBundle) 
-            => assetBundle.InternalAssetBundle;
+            => assetBundle?.InternalAssetBundle;
 
         public static implicit operator AssetBundle(UnityEngine.AssetBundle assetBundle)
             => new() { InternalAssetBundle = assetBundle };
+
+        public bool IsFallback { get; set; } = false;
 
         public static IEnumerator LoadFromIPFS(string path, Action<AssetBundle> result, Action<long, long> reportProgress = null, CancellationToken cancel = default)
         {

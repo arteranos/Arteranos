@@ -117,7 +117,8 @@ namespace Arteranos.Services
 
             // Once the world is placed in global, the old value will be discarded,
             // leading the AssetBundle will be unloaded.
-            yield return G.SceneLoader.LoadScene((AssetBundle)world.TemplateContent, false);
+            AssetBundle templateContent = (AssetBundle)world.TemplateContent;
+            yield return G.SceneLoader.LoadScene(templateContent, templateContent.IsFallback, false);
 
             // In any case, set up a World Editor Data, for remote world editing on a bare template.
             SettingsManager.SetupWorldObjectRoot();

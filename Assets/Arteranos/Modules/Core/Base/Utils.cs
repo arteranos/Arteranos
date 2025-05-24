@@ -362,6 +362,9 @@ namespace Arteranos.Core
             RuntimePlatform.OSXEditor or
             RuntimePlatform.OSXPlayer or
             RuntimePlatform.OSXServer => "Mac",
+            RuntimePlatform.LinuxEditor or
+            RuntimePlatform.LinuxPlayer or
+            RuntimePlatform.LinuxServer => "Linux",
             RuntimePlatform.Android => "Android",
             _ => "AssetBundles",
         };
@@ -371,22 +374,37 @@ namespace Arteranos.Core
         {
             AssetBundle resultAB = null;
             SemaphoreSlim waiter = new(0, 1);
+            bool fallback = false;
 
             IEnumerator Cor()
             {
                 AssetBundle manifestAB = null;
-                yield return AssetBundle.LoadFromIPFS($"{path}/{Utils.GetArchitectureDirName()}/{Utils.GetArchitectureDirName()}", _result => manifestAB = _result, cancel: cancel);
+                string adName = Utils.GetArchitectureDirName();
+                string ipfsPath = $"{path}/{adName}/{adName}";
+                yield return AssetBundle.LoadFromIPFS(ipfsPath, _result => manifestAB = _result, cancel: cancel);
+
+                if (manifestAB == null)
+                {
+                    Debug.LogWarning($"{ipfsPath} platform specific AssetBundle doesn't exist, falling back to the Windows one and attempting to fixup.");
+                    adName = Utils.GetArchitectureDirName(RuntimePlatform.WindowsPlayer);
+                    yield return AssetBundle.LoadFromIPFS($"{path}/{adName}/{adName}", _result => manifestAB = _result, cancel: cancel);
+
+                    fallback = true;
+                }
 
                 if (manifestAB != null)
                 {
                     AssetBundleManifest manifest = ((UnityEngine.AssetBundle)manifestAB).LoadAsset<AssetBundleManifest>("AssetBundleManifest");
                     string actualABName = manifest.GetAllAssetBundles()[0];
 
-                    yield return AssetBundle.LoadFromIPFS($"{path}/{Utils.GetArchitectureDirName()}/{actualABName}", _result => resultAB = _result, reportProgress, cancel);
+                    yield return AssetBundle.LoadFromIPFS($"{path}/{adName}/{actualABName}", _result => resultAB = _result, reportProgress, cancel);
 
                     manifestAB.Dispose();
                 }
+                else
+                    Debug.LogError("No suitable AssetBundle found, even trying a fallback.");
 
+                resultAB.IsFallback = fallback;
                 waiter.Release();
             }
 

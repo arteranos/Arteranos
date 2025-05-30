@@ -6,9 +6,9 @@ using UnityEngine.XR.Interaction.Toolkit;
 namespace Arteranos.User
 {
     [AddComponentMenu("User/Teleportation Area", 10)]
-    public class TeleportationArea : BaseTeleportationInteractable
+    public class TeleportationArea : UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.BaseTeleportationInteractable
     {
-        protected override bool GenerateTeleportRequest(IXRInteractor interactor, RaycastHit raycastHit, ref TeleportRequest teleportRequest)
+        protected override bool GenerateTeleportRequest(UnityEngine.XR.Interaction.Toolkit.Interactors.IXRInteractor interactor, RaycastHit raycastHit, ref UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportRequest teleportRequest)
         {
             if(!enabled || raycastHit.collider == null)
                 return false;
@@ -22,7 +22,7 @@ namespace Arteranos.User
         protected override void OnSelectEntered(SelectEnterEventArgs args)
         {
             if(teleportationProvider == null)
-                teleportationProvider = FindObjectOfType<TeleportationProvider>();
+                teleportationProvider = FindObjectOfType<UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationProvider>();
 
             base.OnSelectEntered(args);
         }
@@ -31,7 +31,7 @@ namespace Arteranos.User
         protected override void OnSelectExited(SelectExitEventArgs args)
         {
             if(teleportationProvider == null)
-                teleportationProvider = FindObjectOfType<TeleportationProvider>();
+                teleportationProvider = FindObjectOfType<UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationProvider>();
 
             base.OnSelectExited(args);
         }
@@ -40,7 +40,7 @@ namespace Arteranos.User
         protected override void OnActivated(ActivateEventArgs args)
         {
             if(teleportationProvider == null)
-                teleportationProvider = FindObjectOfType<TeleportationProvider>();
+                teleportationProvider = FindObjectOfType<UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationProvider>();
 
             base.OnActivated(args);
         }
@@ -49,7 +49,7 @@ namespace Arteranos.User
         protected override void OnDeactivated(DeactivateEventArgs args)
         {
             if(teleportationProvider == null)
-                teleportationProvider = FindObjectOfType<TeleportationProvider>();
+                teleportationProvider = FindObjectOfType<UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationProvider>();
 
             base.OnDeactivated(args);
         }

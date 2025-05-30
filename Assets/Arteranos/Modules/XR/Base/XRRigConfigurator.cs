@@ -18,10 +18,10 @@ namespace Arteranos.XR
 {
     public class XRRigConfigurator : MonoBehaviour
     {
-        [SerializeField] private XRRayInteractor LeftInteractor = null;
-        [SerializeField] private XRInteractorLineVisual LeftLineVisual = null;
-        [SerializeField] private XRRayInteractor RightInteractor = null;
-        [SerializeField] private XRInteractorLineVisual RightLineVisual = null;
+        [SerializeField] private UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor LeftInteractor = null;
+        [SerializeField] private UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual LeftLineVisual = null;
+        [SerializeField] private UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor RightInteractor = null;
+        [SerializeField] private UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals.XRInteractorLineVisual RightLineVisual = null;
 
         private AvatarSnapTurnProvider SnapTurnProvider = null;
         private AvatarContinuousTurnProvider ContTurnProvider = null;
@@ -83,8 +83,8 @@ namespace Arteranos.XR
                     : onlyValidVisibleRay;
 
                 LeftInteractor.lineType = ccs.Controller_Type_left == RayType.Straight
-                    ? XRRayInteractor.LineType.StraightLine
-                    : XRRayInteractor.LineType.ProjectileCurve;
+                    ? UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor.LineType.StraightLine
+                    : UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor.LineType.ProjectileCurve;
 
                 LeftInteractor.acceleration = ccs.Controller_Type_left == RayType.HighArc
                     ? 5.0f
@@ -101,8 +101,8 @@ namespace Arteranos.XR
                     : onlyValidVisibleRay;
 
                 RightInteractor.lineType = ccs.Controller_Type_right == RayType.Straight
-                    ? XRRayInteractor.LineType.StraightLine
-                    : XRRayInteractor.LineType.ProjectileCurve;
+                    ? UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor.LineType.StraightLine
+                    : UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor.LineType.ProjectileCurve;
 
                 RightInteractor.acceleration = ccs.Controller_Type_right == RayType.HighArc
                     ? 5.0f

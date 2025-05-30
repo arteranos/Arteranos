@@ -12,7 +12,7 @@ namespace UnityEngine.XR.Interaction.Toolkit
     /// to the desired location on the user's request.
     /// </summary>
     [AddComponentMenu("XR/Locomotion/Crtled Tele Provider", 11)]
-    public class CTeleProvider : TeleportationProvider
+    public class CTeleProvider : UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationProvider
     {
         private ActionBasedContinuousMoveProvider MoveProvider = null;
 
@@ -99,21 +99,21 @@ namespace UnityEngine.XR.Interaction.Toolkit
             {
                 switch (currentRequest.matchOrientation)
                 {
-                    case MatchOrientation.WorldSpaceUp:
+                    case UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.MatchOrientation.WorldSpaceUp:
                         targetUp = Vector3.up;
                         break;
-                    case MatchOrientation.TargetUp:
+                    case UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.MatchOrientation.TargetUp:
                         targetUp = currentRequest.destinationRotation * Vector3.up;
                         break;
-                    case MatchOrientation.TargetUpAndForward:
+                    case UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.MatchOrientation.TargetUpAndForward:
                         targetUp = currentRequest.destinationRotation * Vector3.up;
                         targetForward = currentRequest.destinationRotation * Vector3.forward;
                         break;
-                    case MatchOrientation.None:
+                    case UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.MatchOrientation.None:
                         // Change nothing. Maintain current origin rotation.
                         break;
                     default:
-                        Assert.IsTrue(false, $"Unhandled {nameof(MatchOrientation)}={currentRequest.matchOrientation}.");
+                        Assert.IsTrue(false, $"Unhandled {nameof(UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.MatchOrientation)}={currentRequest.matchOrientation}.");
                         break;
                 }
 

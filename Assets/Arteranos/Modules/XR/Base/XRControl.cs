@@ -230,13 +230,13 @@ namespace Arteranos.XR
         public void Teleport(Vector3 position, Quaternion rotation) 
         {
             XROrigin xro = CurrentVRRig;
-            if (!xro || !xro.gameObject.TryGetComponent(out TeleportationProvider tp)) return;
+            if (!xro || !xro.gameObject.TryGetComponent(out UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationProvider tp)) return;
 
             tp.QueueTeleportRequest(new()
             {
                 destinationPosition = position,
                 destinationRotation = rotation,
-                matchOrientation = MatchOrientation.TargetUpAndForward,
+                matchOrientation = UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.MatchOrientation.TargetUpAndForward,
                 requestTime = Time.time
             });
         }

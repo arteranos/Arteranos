@@ -8,7 +8,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit;
+
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 
 namespace Arteranos.XR
@@ -17,7 +17,7 @@ namespace Arteranos.XR
     /// Extension of the XRGrabInteractable to make it possible to
     /// transfer the vectors from the client's throw-on-detach to the server-
     /// </summary>
-    public class ArteranosGrabInteractable : XRGrabInteractable
+    public class ArteranosGrabInteractable : UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
     {
         Rigidbody m_Rigidbody;
 
@@ -40,7 +40,7 @@ namespace Arteranos.XR
             {
                 base.Detach();
 
-                m_DetachVelocity = m_Rigidbody.velocity;
+                m_DetachVelocity = m_Rigidbody.linearVelocity;
                 m_DetachAngularVelocity = m_Rigidbody.angularVelocity;
             }
             else
@@ -50,7 +50,7 @@ namespace Arteranos.XR
                 m_Rigidbody.isKinematic = false;
                 base.Detach();
 
-                m_DetachVelocity = m_Rigidbody.velocity;
+                m_DetachVelocity = m_Rigidbody.linearVelocity;
                 m_DetachAngularVelocity = m_Rigidbody.angularVelocity;
 
                 // Swtting isKinematic to true back on zeros the velocities.

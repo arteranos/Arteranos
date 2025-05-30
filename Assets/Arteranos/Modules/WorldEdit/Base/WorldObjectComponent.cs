@@ -76,7 +76,7 @@ namespace Arteranos.WorldEdit
 
         private Rigidbody body = null;
         private ArteranosGrabInteractable mover = null;
-        private XRSimpleInteractable clicker = null;
+        private UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable clicker = null;
         private GameObject enclosingObject = null;
 
         public void Awake()
@@ -89,7 +89,7 @@ namespace Arteranos.WorldEdit
             mover.smoothRotation = true;
             mover.enabled = false;
 
-            clicker = gameObject.AddComponent<XRSimpleInteractable>();
+            clicker = gameObject.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
             clicker.enabled = false;
 
             mover.firstSelectEntered.AddListener(GotObjectGrabbed);

@@ -85,7 +85,7 @@ namespace Arteranos.WorldEdit.Components
 
             // Debug.Log($"[Server] Detach velocities: {detachVelocity}, {detachAngularVelocity}");
 
-            Rigidbody.velocity = detachVelocity;
+            Rigidbody.linearVelocity = detachVelocity;
             Rigidbody.angularVelocity = detachAngularVelocity;
         }
 
@@ -99,7 +99,7 @@ namespace Arteranos.WorldEdit.Components
             {
                 if (!Rigidbody && !GameObject.TryGetComponent(out Rigidbody)) return;
 
-                Rigidbody.velocity = value;
+                Rigidbody.linearVelocity = value;
             }
         }
 
@@ -116,8 +116,8 @@ namespace Arteranos.WorldEdit.Components
 
             Rigidbody.useGravity = !isInEditMode && ObeysGravity;
             Rigidbody.mass = Mass;
-            Rigidbody.drag = Drag;
-            Rigidbody.angularDrag = AngularDrag;
+            Rigidbody.linearDamping = Drag;
+            Rigidbody.angularDamping = AngularDrag;
         }
     }
 }

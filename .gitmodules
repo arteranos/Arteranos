@@ -25,3 +25,6 @@
 [submodule "Packages/Unity_Opus"]
 	path = Packages/Unity_Opus
 	url = git@github.com:arteranos/Unity_Opus.git
+[submodule "Packages/lightmap-switching-tool"]
+	path = Packages/lightmap-switching-tool
+	url = git@github.com:arteranos/lightmap-switching-tool.git

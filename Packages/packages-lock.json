@@ -435,13 +435,12 @@
       }
     },
     "li.lightingtools.lightmapswitcher": {
-      "version": "https://github.com/willneedit/lightmap-switching-tool.git#package",
+      "version": "file:lightmap-switching-tool",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.editorcoroutines": "0.1.0-preview.1"
-      },
-      "hash": "94c4878d39114a5757577efef894dd1d8482e148"
+      }
     },
     "mirror": {
       "version": "file:Mirror",

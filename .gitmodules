@@ -16,9 +16,6 @@
 [submodule "Packages/Unity_Sceelix_Plugin"]
 	path = Packages/Unity_Sceelix_Plugin
 	url = git@github.com:arteranos/Unity_Sceelix_Plugin.git
-[submodule "Packages/com.unity.xr.management"]
-	path = Packages/com.unity.xr.management
-	url = git@github.com:arteranos/com.unity.xr.management.git
 [submodule "Packages/com.unity.xr.openxr"]
 	path = Packages/com.unity.xr.openxr
 	url = git@github.com:arteranos/com.unity.xr.openxr.git

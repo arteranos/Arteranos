@@ -41,7 +41,7 @@ namespace Arteranos.Editor
 
 
 
-        [MenuItem("Arteranos/Worlds/Build scene as world", false, 10)]
+        [MenuItem("Arteranos/Worlds/Build scene as world...", false, 10)]
         public static void ShowScenebuilderGUI()
         {
             client = Client.Load();
@@ -370,7 +370,8 @@ namespace Arteranos.Editor
 
             List<BuildTarget> targets = new()
             {
-                BuildTarget.StandaloneWindows64
+                BuildTarget.StandaloneWindows64,
+                BuildTarget.StandaloneLinux64
             };
 
             if(string.IsNullOrEmpty(targetFile)) targetFile = null;

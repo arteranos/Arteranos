@@ -252,9 +252,15 @@ namespace Arteranos.Editor
 
         public static string GetArchitectureDirName(BuildTarget p)
         {
-            if (p == BuildTarget.Android) return Utils.GetArchitectureDirName(RuntimePlatform.Android);
-            if (p == BuildTarget.StandaloneOSX) return Utils.GetArchitectureDirName(RuntimePlatform.OSXPlayer);
-            return Utils.GetArchitectureDirName(RuntimePlatform.WindowsPlayer);
+            RuntimePlatform r = p switch
+            {
+                BuildTarget.StandaloneOSX => RuntimePlatform.OSXPlayer,
+                BuildTarget.Android => RuntimePlatform.Android,
+                BuildTarget.StandaloneLinux64 => RuntimePlatform.LinuxPlayer,
+                _ => RuntimePlatform.WindowsPlayer,
+            };
+
+            return Utils.GetArchitectureDirName(r);
         }
 
         public static Dictionary<BuildTarget, bool> supported_cache = new();

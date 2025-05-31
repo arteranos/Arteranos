@@ -176,7 +176,7 @@ namespace Arteranos.Editor
 
             string path = Path.Combine(picpath, name);
 
-            Camera DroneCamera = FindObjectOfType<Camera>();
+            Camera DroneCamera = FindFirstObjectByType<Camera>();
 
             RenderTexture rt = new(1920, 1080, 0, RenderTextureFormat.ARGB32);
             DroneCamera.targetTexture = rt;
@@ -293,7 +293,7 @@ namespace Arteranos.Editor
 
         private static void ScrubEssentials()
         {
-            foreach(Camera camera in FindObjectsOfType<Camera>())
+            foreach(Camera camera in FindObjectsByType<Camera>(FindObjectsSortMode.None))
                 DestroyImmediate(camera.gameObject);
 
             IXRControl xrc;
@@ -301,7 +301,7 @@ namespace Arteranos.Editor
                 DestroyImmediate(xrc.gameObject);
 
             Persistence p;
-            while(p = FindObjectOfType<Persistence>())
+            while(p = FindFirstObjectByType<Persistence>())
                 DestroyImmediate(p.gameObject);
         }
 
@@ -356,7 +356,7 @@ namespace Arteranos.Editor
                 DestroyImmediate(f);
             };
 
-            LevelLightmapData lld = FindObjectOfType<LevelLightmapData>();
+            LevelLightmapData lld = FindFirstObjectByType<LevelLightmapData>();
             lld.lightingScenariosData[0].storeRendererInfos = true;
             lld.lightingScenariosData[0].geometrySceneName = itemPath;
 

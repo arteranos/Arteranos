@@ -1,27 +1,27 @@
 [submodule "Packages/Mirror"]
-	path = Packages/Mirror
+	path = Packages/com.willneedit.mirror
 	url = git@github.com:arteranos/Mirror.git
 [submodule "Packages/UnityAsyncImageLoader"]
-	path = Packages/UnityAsyncImageLoader
+	path = Packages/com.looooong.asyncimageloader
 	url = git@github.com:arteranos/UnityAsyncImageLoader.git
 [submodule "Packages/glTFast"]
-	path = Packages/glTFast
+	path = Packages/com.atteneder.gltfast
 	url = git@github.com:arteranos/glTFast.git
 [submodule "Packages/Arteranos-IPFS-interface"]
-	path = Packages/Arteranos-IPFS-interface
+	path = Packages/com.willneedit.ipfs.iface
 	url = git@github.com:arteranos/Arteranos-IPFS-interface.git
 [submodule "Packages/LiteNetLibTransportNG"]
-	path = Packages/LiteNetLibTransportNG
+	path = Packages/com.willneedit.mirror.lnltransportng
 	url = git@github.com:arteranos/LiteNetLibTransportNG.git
 [submodule "Packages/Unity_Sceelix_Plugin"]
-	path = Packages/Unity_Sceelix_Plugin
+	path = Packages/com.willneedit.sceelix_plugin
 	url = git@github.com:arteranos/Unity_Sceelix_Plugin.git
 [submodule "Packages/com.unity.xr.openxr"]
 	path = Packages/com.unity.xr.openxr
 	url = git@github.com:arteranos/com.unity.xr.openxr.git
 [submodule "Packages/Unity_Opus"]
-	path = Packages/Unity_Opus
+	path = Packages/com.willneedit.opus
 	url = git@github.com:arteranos/Unity_Opus.git
 [submodule "Packages/lightmap-switching-tool"]
-	path = Packages/lightmap-switching-tool
+	path = Packages/li.lightingtools.lightmapswitcher
 	url = git@github.com:arteranos/lightmap-switching-tool.git

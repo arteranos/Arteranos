@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.atteneder.gltfast": {
-      "version": "file:glTFast",
+      "version": "file:com.atteneder.gltfast",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
@@ -12,7 +12,7 @@
       }
     },
     "com.looooong.asyncimageloader": {
-      "version": "file:UnityAsyncImageLoader",
+      "version": "file:com.looooong.asyncimageloader",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
@@ -440,25 +440,31 @@
       }
     },
     "com.willneedit.ipfs.iface": {
-      "version": "file:Arteranos-IPFS-interface",
+      "version": "file:com.willneedit.ipfs.iface",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.willneedit.mirror": {
+      "version": "file:com.willneedit.mirror",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
     },
     "com.willneedit.mirror.lnltransportng": {
-      "version": "file:LiteNetLibTransportNG",
+      "version": "file:com.willneedit.mirror.lnltransportng",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
     },
     "com.willneedit.opus": {
-      "version": "file:Unity_Opus",
+      "version": "file:com.willneedit.opus",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
     },
     "com.willneedit.sceelix_plugin": {
-      "version": "file:Unity_Sceelix_Plugin",
+      "version": "file:com.willneedit.sceelix_plugin",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
@@ -466,18 +472,12 @@
       }
     },
     "li.lightingtools.lightmapswitcher": {
-      "version": "file:lightmap-switching-tool",
+      "version": "file:li.lightingtools.lightmapswitcher",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
         "com.unity.editorcoroutines": "0.1.0-preview.1"
       }
-    },
-    "mirror": {
-      "version": "file:Mirror",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",

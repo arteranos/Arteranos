@@ -108,10 +108,15 @@ namespace Arteranos.Services
 
         public void RouteAudio(Transform transform)
         {
+            UnityEngine.Audio.AudioMixerGroup mixerGroupEnv = G.AudioManager.MixerGroupEnv;
+
+            // Server may (=should) not have an audio output
+            if (!mixerGroupEnv) return;
+
             // Maybe more groups, like Ambient, BGM, and streaming music/video?
             // Distinguish with Name/Tags?
             foreach (AudioSource source in transform.GetComponents<AudioSource>())
-                source.outputAudioMixerGroup = G.AudioManager.MixerGroupEnv;
+                source.outputAudioMixerGroup = mixerGroupEnv;
 
             for (int i = 0, c = transform.childCount; i < c; ++i)
                 RouteAudio(transform.GetChild(i));

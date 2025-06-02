@@ -29,8 +29,23 @@ namespace Arteranos.Services
             remove => MicInput.OnSampleReady -= value;
         }
 
-        public AudioMixerGroup MixerGroupVoice => mixer.FindMatchingGroups("Master/Voice")[0];
-        public AudioMixerGroup MixerGroupEnv => mixer.FindMatchingGroups("Master/Environment")[0];
+        public AudioMixerGroup MixerGroupVoice
+        {
+            get
+            {
+                AudioMixerGroup[] audioMixerGroups = mixer.FindMatchingGroups("Master/Voice");
+                return (audioMixerGroups?.Length ?? 0) > 0 ? audioMixerGroups[0] : null;
+            }
+        }
+
+        public AudioMixerGroup MixerGroupEnv
+        {
+            get
+            {
+                AudioMixerGroup[] audioMixerGroups = mixer.FindMatchingGroups("Master/Environment");
+                return (audioMixerGroups?.Length ?? 0) > 0 ? audioMixerGroups[0] : null;
+            }
+        }
 
         public float VolumeMaster
         {

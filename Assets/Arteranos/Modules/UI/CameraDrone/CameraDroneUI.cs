@@ -30,7 +30,7 @@ namespace Arteranos.UI
 
                 using Stream fs = File.Create(path);
 
-                yield return Utils.TakePhoto(DroneCamera, fs);
+                yield return Common.Utils.TakePhoto(DroneCamera, fs);
 
                 Debug.Log($"Written screenshot to {path}");
             }

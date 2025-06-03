@@ -11,7 +11,8 @@
         "Arteranos.WorldEdit",
         "Ipfs",
         "ipfs.Unity",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "com.willneedit.arteranos.common"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

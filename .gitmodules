@@ -25,3 +25,9 @@
 [submodule "Packages/lightmap-switching-tool"]
 	path = Packages/li.lightingtools.lightmapswitcher
 	url = git@github.com:arteranos/lightmap-switching-tool.git
+[submodule "Packages/com.willneedit.arteranos.sdk"]
+	path = Packages/com.willneedit.arteranos.sdk
+	url = git@github.com:arteranos/com.willneedit.arteranos.sdk.git
+[submodule "Packages/com.willneedit.arteranos.common"]
+	path = Packages/com.willneedit.arteranos.common
+	url = git@github.com:arteranos/com.willneedit.arteranos.common.git

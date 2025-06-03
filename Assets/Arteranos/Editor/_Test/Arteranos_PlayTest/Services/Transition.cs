@@ -130,7 +130,7 @@ namespace Arteranos.PlayTest.Services
             yield return UploadTestWorld();
 
             AssetBundle ab_ab = null;
-            yield return AssetBundle.LoadFromIPFS($"{WorldCid}/{Utils.GetArchitectureDirName()}/{Utils.GetArchitectureDirName()}", _result => ab_ab = _result);
+            yield return AssetBundle.LoadFromIPFS($"{WorldCid}/{Common.Utils.GetArchitectureDirName()}/{Common.Utils.GetArchitectureDirName()}", _result => ab_ab = _result);
 
             Assert.IsNotNull(ab_ab);
             Assert.IsNotNull((UnityEngine.AssetBundle)ab_ab);
@@ -144,7 +144,7 @@ namespace Arteranos.PlayTest.Services
 
             AssetBundle actual_ab = null;
             yield return AssetBundle.LoadFromIPFS(
-                $"{WorldCid}/{Utils.GetArchitectureDirName()}/{actualABName}",
+                $"{WorldCid}/{Common.Utils.GetArchitectureDirName()}/{actualABName}",
                 _result => actual_ab = _result,
                 ReportProgress);
 
@@ -166,14 +166,14 @@ namespace Arteranos.PlayTest.Services
             IEnumerator Cor()
             {
                 AssetBundle manifestAB = null;
-                yield return AssetBundle.LoadFromIPFS($"{path}/{Utils.GetArchitectureDirName()}/{Utils.GetArchitectureDirName()}", _result => manifestAB = _result, cancel: cancel);
+                yield return AssetBundle.LoadFromIPFS($"{path}/{Common.Utils.GetArchitectureDirName()}/{Common.Utils.GetArchitectureDirName()}", _result => manifestAB = _result, cancel: cancel);
 
                 if(manifestAB != null)
                 {
                     AssetBundleManifest manifest = ((UnityEngine.AssetBundle)manifestAB).LoadAsset<AssetBundleManifest>("AssetBundleManifest");
                     string actualABName = manifest.GetAllAssetBundles()[0];
 
-                    yield return AssetBundle.LoadFromIPFS($"{path}/{Utils.GetArchitectureDirName()}/{actualABName}", _result => resultAB = _result, reportProgress, cancel);
+                    yield return AssetBundle.LoadFromIPFS($"{path}/{Common.Utils.GetArchitectureDirName()}/{actualABName}", _result => resultAB = _result, reportProgress, cancel);
 
                     manifestAB.Dispose();
                 }

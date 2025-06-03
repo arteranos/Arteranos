@@ -424,6 +424,20 @@
         "com.unity.inputsystem": "1.4.2"
       }
     },
+    "com.willneedit.arteranos.common": {
+      "version": "file:com.willneedit.arteranos.common",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "com.willneedit.arteranos.sdk": {
+      "version": "file:com.willneedit.arteranos.sdk",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.willneedit.arteranos.common": "1.0.0"
+      }
+    },
     "com.willneedit.ipfs.iface": {
       "version": "file:com.willneedit.ipfs.iface",
       "depth": 0,

@@ -232,7 +232,7 @@ namespace Arteranos.WorldEdit
                 ScreenshotCamera.TryGetComponent(out Camera cam);
 
                 using MemoryStream ms = new();
-                yield return Utils.TakePhoto(cam, ms);
+                yield return Common.Utils.TakePhoto(cam, ms);
 
                 WorldDecoration decor = AssembleWorldDecoration();
 

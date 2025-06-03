@@ -260,7 +260,7 @@ namespace Arteranos.Editor
                 _ => RuntimePlatform.WindowsPlayer,
             };
 
-            return Utils.GetArchitectureDirName(r);
+            return Arteranos.Common.Utils.GetArchitectureDirName(r);
         }
 
         public static Dictionary<BuildTarget, bool> supported_cache = new();

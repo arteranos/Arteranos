@@ -42,7 +42,7 @@ namespace Arteranos.Core.Operations
                 IFileSystemNode fsn = await G.IPFSService.AddDirectory(path, cancel: token);
                 context.Cid = fsn.Id;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.LogException(e);
             }
@@ -210,7 +210,7 @@ namespace Arteranos.Core.Operations
                 byte[] ta = null;
                 TaskScheduler.ScheduleCoroutine(() => LBACoroutine(assetURL, _ta => ta = _ta));
 
-                while(ta == null) Thread.Yield();
+                while (ta == null) Thread.Yield();
                 return ta;
             }
 
@@ -241,7 +241,7 @@ namespace Arteranos.Core.Operations
                 totalBytes = response.Content.Headers.ContentLength ?? -1;
                 inStream = await response.Content.ReadAsStreamAsync();
             }
-            else if(assetURL.StartsWith("resource:///"))
+            else if (assetURL.StartsWith("resource:///"))
             {
                 assetURL = assetURL[12..];
 
@@ -260,10 +260,11 @@ namespace Arteranos.Core.Operations
 
             using FileStream outStream = File.Create(context.TempFile);
 
-            await Utils.CopyWithProgress(inStream, outStream, 
-                bytes => {
+            await Common.Utils.CopyWithProgress(inStream, outStream,
+                bytes =>
+                {
                     actualBytes = bytes;
-                    ProgressChanged((float) bytes / totalBytes);
+                    ProgressChanged((float)bytes / totalBytes);
                 }, token);
 
             return context;
@@ -318,7 +319,7 @@ namespace Arteranos.Core.Operations
         public static Cid GetUploadedCid(Context _context)
             => (_context as AssetUploaderContext).Cid;
 
-        public static string GetUploadedFilename(Context _context) 
+        public static string GetUploadedFilename(Context _context)
             => Path.GetFileName((_context as AssetUploaderContext).AssetURL);
     }
 }

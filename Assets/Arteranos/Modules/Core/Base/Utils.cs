@@ -13,14 +13,11 @@ using System.Reflection;
 using System.Text;
 using Arteranos.Avatar;
 using Arteranos.Social;
-using System.Collections.Generic;
 using UnityEngine.UI;
 using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections;
-using Object = UnityEngine.Object;
-using Ipfs.Unity;
 using AssetBundle = Arteranos.Core.Managed.AssetBundle;
 using ICSharpCode.SharpZipLib.Tar;
 
@@ -171,21 +168,6 @@ namespace Arteranos.Core
         }
 
         /// <summary>
-        /// Shuffle a list of items at random.
-        /// </summary>
-        /// <param name="list">The list items to be shuffled</param>
-        public static void Shuffle<T>(this IList<T> list)
-        {
-            System.Random random = new();
-
-            for (int i = list.Count - 1; i > 0; i--)
-            {
-                int rnd = random.Next(i + 1);
-                (list[i], list[rnd]) = (list[rnd], list[i]);
-            }
-        }
-
-        /// <summary>
         /// Advance one frame for exponential smoothing
         /// (ref. https://en.wikipedia.org/wiki/Exponential_smoothing )
         /// </summary>
@@ -223,40 +205,6 @@ namespace Arteranos.Core
             image.sprite = Sprite.Create(icon,
                 new Rect(0, 0, icon.width, icon.height),
                 Vector2.zero);
-        }
-
-        /// <summary>
-        /// Copy from inStream to outStream, report its progress.
-        /// </summary>
-        /// <param name="inStream"></param>
-        /// <param name="outStream"></param>
-        /// <param name="reportProgress"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        public static async Task CopyWithProgress(Stream inStream, Stream outStream, Action<long> reportProgress = null, CancellationToken token = default)
-        {
-            long totalBytes = 0;
-            long lastreported = 0;
-            // 0.5MB. Should be a compromise between of too few progress reports and bandwidth bottlenecking
-            byte[] buffer = new byte[512 * 1024];
-
-            while (!token.IsCancellationRequested)
-            {
-                int bytesRead = await inStream.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false);
-
-                if (bytesRead == 0) break;
-
-                totalBytes += bytesRead;
-                if(totalBytes >= lastreported + 512*1024)
-                {
-                    reportProgress?.Invoke(totalBytes);
-                    lastreported = totalBytes;
-                }
-
-                await outStream.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
-            }
-            outStream.Flush();
-            outStream.Close();
         }
 
         public static void RateGameObject(GameObject go, IObjectStats warn, IObjectStats cutoff, IObjectStats counted)
@@ -315,60 +263,6 @@ namespace Arteranos.Core
                 CountGameObject(transform, counted);
         }
 
-        /// <summary>
-        /// Take a screenshot on a camera with a Render Texture
-        /// </summary>
-        /// <param name="cam">Camera, positioned and with a valid Render Texture</param>
-        /// <param name="stream">Output stream to write the PNG to</param>
-        /// <returns>Coroutine IEnumerator</returns>
-        public static IEnumerator TakePhoto(Camera cam, Stream stream)
-        {
-            RenderTexture rt = cam.targetTexture;
-
-            RenderTexture mRt = new(rt.width, rt.height, rt.depth, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB)
-            {
-                antiAliasing = rt.antiAliasing
-            };
-
-            Texture2D tex = new(rt.width, rt.height, TextureFormat.ARGB32, false);
-            cam.targetTexture = mRt;
-            cam.Render();
-            RenderTexture.active = mRt;
-
-            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-            tex.Apply();
-
-            cam.targetTexture = rt;
-            RenderTexture.active = rt;
-
-            byte[] Bytes = tex.EncodeToPNG();
-            yield return Asyncs.Async2Coroutine(() => stream.WriteAsync(Bytes, 0, Bytes.Length));
-
-            Object.Destroy(tex);
-
-            Object.Destroy(mRt);
-
-            yield return null;
-        }
-
-        public static string GetArchitectureDirName()
-        {
-            RuntimePlatform p = Application.platform;
-            return GetArchitectureDirName(p);
-        }
-
-        public static string GetArchitectureDirName(RuntimePlatform p) => p switch
-        {
-            RuntimePlatform.OSXEditor or
-            RuntimePlatform.OSXPlayer or
-            RuntimePlatform.OSXServer => "Mac",
-            RuntimePlatform.LinuxEditor or
-            RuntimePlatform.LinuxPlayer or
-            RuntimePlatform.LinuxServer => "Linux",
-            RuntimePlatform.Android => "Android",
-            _ => "Windows",
-        };
-
         // TODO - Move into common space to make it accessible to kit loading
         public static async Task<AssetBundle> LoadAssetBundle(string path, Action<long, long> reportProgress = null, CancellationToken cancel = default)
         {
@@ -379,14 +273,14 @@ namespace Arteranos.Core
             IEnumerator Cor()
             {
                 AssetBundle manifestAB = null;
-                string adName = Utils.GetArchitectureDirName();
+                string adName = Common.Utils.GetArchitectureDirName();
                 string ipfsPath = $"{path}/{adName}/{adName}";
                 yield return AssetBundle.LoadFromIPFS(ipfsPath, _result => manifestAB = _result, cancel: cancel);
 
                 if (manifestAB == null)
                 {
                     Debug.LogWarning($"{ipfsPath} platform specific AssetBundle doesn't exist, falling back to the Windows one and attempting to fixup.");
-                    adName = Utils.GetArchitectureDirName(RuntimePlatform.WindowsPlayer);
+                    adName = Common.Utils.GetArchitectureDirName(RuntimePlatform.WindowsPlayer);
                     yield return AssetBundle.LoadFromIPFS($"{path}/{adName}/{adName}", _result => manifestAB = _result, cancel: cancel);
 
                     fallback = true;

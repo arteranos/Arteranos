@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "Arteranos.Core",
         "Arteranos.Services",
-        "Ipfs"
+        "Ipfs",
+        "com.willneedit.arteranos.common"
     ],
     "includePlatforms": [
         "Editor"

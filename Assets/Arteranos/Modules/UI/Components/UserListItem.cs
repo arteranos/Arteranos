@@ -20,6 +20,7 @@ using Arteranos.Services;
 using Ipfs;
 using UnityEngine.UI;
 using System.Text;
+using Arteranos.Common;
 
 namespace Arteranos.UI
 {
@@ -138,7 +139,7 @@ namespace Arteranos.UI
 
                 // Cannot send texts to offline users. They could want to deny them.
                 if (targetUser != null && G.Me != null)
-                    btn_SendText.gameObject.SetActive(Utils.IsAbleTo(UserCapabilities.CanSendText, targetUser));
+                    btn_SendText.gameObject.SetActive(Core.Utils.IsAbleTo(UserCapabilities.CanSendText, targetUser));
                 else
                     btn_SendText.gameObject.SetActive(false);
 

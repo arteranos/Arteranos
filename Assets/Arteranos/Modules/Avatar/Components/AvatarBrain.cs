@@ -14,10 +14,11 @@ using System;
 using Arteranos.UI;
 using Arteranos.Social;
 using Random = UnityEngine.Random;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
 using System.Collections.Generic;
 using Arteranos.Services;
+using Arteranos.Common;
 
 namespace Arteranos.Avatar
 {

@@ -12,9 +12,10 @@ using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Collections.Generic;
 using Arteranos.Social;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
 using Ipfs;
+using Arteranos.Common;
 
 namespace Arteranos.Core
 {
@@ -70,13 +71,13 @@ namespace Arteranos.Core
     {
         [Description("Smooth")]
         Smooth = 0,
-        [Description("Snap 90°")]
+        [Description("Snap 90ï¿½")]
         Snap90,
-        [Description("Snap 45°")]
+        [Description("Snap 45ï¿½")]
         Snap45,
-        [Description("Snap 30°")]
+        [Description("Snap 30ï¿½")]
         Snap30,
-        [Description("Snap 22.5°")]
+        [Description("Snap 22.5ï¿½")]
         Snap225
     }
 

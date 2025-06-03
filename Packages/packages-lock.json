@@ -428,7 +428,9 @@
       "version": "file:com.willneedit.arteranos.common",
       "depth": 0,
       "source": "embedded",
-      "dependencies": {}
+      "dependencies": {
+        "com.willneedit.ipfs.iface": "1.0.0"
+      }
     },
     "com.willneedit.arteranos.sdk": {
       "version": "file:com.willneedit.arteranos.sdk",

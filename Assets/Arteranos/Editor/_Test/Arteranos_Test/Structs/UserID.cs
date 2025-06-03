@@ -3,8 +3,9 @@ using NUnit.Framework;
 using System;
 using System.IO;
 using Arteranos.Core;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
+using Arteranos.Common;
 
 namespace Arteranos.Test.Structs
 {

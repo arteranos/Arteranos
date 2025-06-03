@@ -5,6 +5,7 @@
  * residing in the LICENSE.md file in the project's root directory.
  */
 
+using Arteranos.Common;
 using Arteranos.Core;
 using Arteranos.Social;
 using Ipfs.Cryptography.Proto;

@@ -13,7 +13,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 using Arteranos.Core;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 
 namespace Arteranos.UI
 {

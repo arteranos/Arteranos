@@ -6,6 +6,7 @@
  */
 
 using System.IO;
+using Arteranos.Common;
 using ProtoBuf;
 
 namespace Arteranos.Core

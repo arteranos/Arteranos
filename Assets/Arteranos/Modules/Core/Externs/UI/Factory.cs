@@ -7,7 +7,7 @@
 
 using Arteranos.Avatar;
 using Arteranos.Core;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using System;
 using System.Linq;
 using UnityEngine;

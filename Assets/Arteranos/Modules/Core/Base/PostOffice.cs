@@ -5,6 +5,7 @@
  * residing in the LICENSE.md file in the project's root directory.
  */
 
+using Arteranos.Common;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

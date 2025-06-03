@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using System.Text;
 using System.Security.Cryptography;
 

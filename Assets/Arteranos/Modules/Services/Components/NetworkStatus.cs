@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using Arteranos.Core.Managed;
 using System.Runtime.InteropServices;
+using Arteranos.Common;
 
 namespace Arteranos.Services
 {

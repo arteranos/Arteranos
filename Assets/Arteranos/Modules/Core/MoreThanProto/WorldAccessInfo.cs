@@ -7,6 +7,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using Arteranos.Common;
 
 namespace Arteranos.Core
 {

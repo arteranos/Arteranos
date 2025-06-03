@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Arteranos.Avatar;
 using Arteranos.Services;
+using Arteranos.Common;
 
 namespace Arteranos.UI
 {

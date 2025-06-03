@@ -6,6 +6,7 @@
  */
 
 using Arteranos.Avatar;
+using Arteranos.Common;
 using Arteranos.Services;
 using Ipfs;
 using System;

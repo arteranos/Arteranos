@@ -9,8 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ipfs;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using System.Net;
+using Arteranos.Common;
 
 namespace Arteranos.Core
 {

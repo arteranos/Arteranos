@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using AssetBundle = Arteranos.Core.Managed.AssetBundle;
 using System.Linq;
 using Newtonsoft.Json;
+using Arteranos.Common;
 
 
 namespace Arteranos.WorldEdit
@@ -156,7 +157,7 @@ namespace Arteranos.WorldEdit
         {
             // TODO ten minutes timeout? Configurable?
             using CancellationTokenSource cts = new(600000);
-            return await Utils.LoadAssetBundle(RootCid, cancel: cts.Token);
+            return await Core.Utils.LoadAssetBundle(RootCid, cancel: cts.Token);
         }
 
         // ---------------------------------------------------------------

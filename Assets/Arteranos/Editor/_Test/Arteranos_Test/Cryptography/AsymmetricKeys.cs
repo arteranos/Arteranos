@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using System.Text;
 
 namespace Arteranos.Test.Cryptography

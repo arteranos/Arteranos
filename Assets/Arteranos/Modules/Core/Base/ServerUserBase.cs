@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.ComponentModel;
+using Arteranos.Common;
 
 namespace Arteranos.Core
 {

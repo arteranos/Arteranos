@@ -6,7 +6,8 @@
  */
 
 using System.IO;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common;
+using Arteranos.Common.Cryptography;
 using Mirror;
 using ProtoBuf;
 

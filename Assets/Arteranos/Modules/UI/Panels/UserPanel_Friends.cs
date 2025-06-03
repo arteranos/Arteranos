@@ -6,7 +6,7 @@
  */
 
 using System.Collections.Generic;
-
+using Arteranos.Common;
 using Arteranos.Core;
 using Arteranos.Social;
 

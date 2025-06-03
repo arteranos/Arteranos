@@ -20,6 +20,7 @@ using System.Threading;
 using System.Collections;
 using AssetBundle = Arteranos.Core.Managed.AssetBundle;
 using ICSharpCode.SharpZipLib.Tar;
+using Arteranos.Common;
 
 namespace Arteranos.Core
 {

@@ -22,8 +22,9 @@ using System.Collections.Concurrent;
 using Ipfs.Cryptography.Proto;
 using ProtoBuf;
 using System.IO;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using Ipfs;
+using Arteranos.Common;
 
 /*
     Documentation: https://mirror-networking.gitbook.io/docs/components/network-authenticators

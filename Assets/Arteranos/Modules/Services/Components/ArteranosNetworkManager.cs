@@ -7,7 +7,7 @@ using System;
 using System.Threading.Tasks;
 using Arteranos.UI;
 using Ipfs.Cryptography.Proto;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using System.Collections;
 using Arteranos.Social;
 using System.Linq;
@@ -15,6 +15,7 @@ using Ipfs;
 using System.IO;
 using Arteranos.Core.Managed;
 using Arteranos.WorldEdit;
+using Arteranos.Common;
 
 /*
     Documentation: https://mirror-networking.gitbook.io/docs/components/network-manager

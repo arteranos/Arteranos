@@ -6,7 +6,7 @@
  */
 
 using Arteranos.Core;
-using Arteranos.Core.Cryptography;
+using Arteranos.Common.Cryptography;
 using Ipfs;
 using Ipfs.Cryptography.Proto;
 using Ipfs.Http;

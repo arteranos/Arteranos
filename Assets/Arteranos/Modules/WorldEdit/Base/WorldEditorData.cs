@@ -15,6 +15,7 @@ using UnityEngine.InputSystem;
 using Arteranos.Core;
 using AssetBundle = Arteranos.Core.Managed.AssetBundle;
 using Arteranos.WorldEdit.Components;
+using Arteranos.Common;
 
 
 namespace Arteranos.WorldEdit

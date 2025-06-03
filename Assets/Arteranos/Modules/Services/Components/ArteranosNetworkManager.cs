@@ -720,7 +720,7 @@ namespace Arteranos.Services
 
                 if ((UnityEngine.AssetBundle)world.TemplateContent.Result == null)
                 {
-                    yield return ShowDialogCoroutine($"Error in loading world '{world.RootCid}' - disconnecting");
+                    yield return ShowDialogCoroutine($"Error in loading world '{world.WorldInfo.Result.WorldName}' - disconnecting");
 
                     // Invalidate the world info, because we are in a transitional stage.
                     world = null;

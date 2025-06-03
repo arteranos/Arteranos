@@ -366,7 +366,7 @@ namespace Arteranos.Core
             RuntimePlatform.LinuxPlayer or
             RuntimePlatform.LinuxServer => "Linux",
             RuntimePlatform.Android => "Android",
-            _ => "AssetBundles",
+            _ => "Windows",
         };
 
         // TODO - Move into common space to make it accessible to kit loading
@@ -392,6 +392,16 @@ namespace Arteranos.Core
                     fallback = true;
                 }
 
+                if (manifestAB == null)
+                {
+                    Debug.LogWarning($"...Not even the 'Windows' AssetBundle exists, trying 'AssetBundles'...");
+
+                    adName = "AssetBundles";
+                    yield return AssetBundle.LoadFromIPFS($"{path}/{adName}/{adName}", _result => manifestAB = _result, cancel: cancel);
+
+                    fallback = true;
+                }
+
                 if (manifestAB != null)
                 {
                     AssetBundleManifest manifest = ((UnityEngine.AssetBundle)manifestAB).LoadAsset<AssetBundleManifest>("AssetBundleManifest");
@@ -402,9 +412,9 @@ namespace Arteranos.Core
                     manifestAB.Dispose();
                 }
                 else
-                    Debug.LogError("No suitable AssetBundle found, even trying a fallback.");
+                    Debug.LogError("No suitable AssetBundle found, giving up.");
 
-                resultAB.IsFallback = fallback;
+                if(resultAB != null) resultAB.IsFallback = fallback;
                 waiter.Release();
             }
 

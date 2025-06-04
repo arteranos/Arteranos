@@ -71,13 +71,13 @@ namespace Arteranos.Core
     {
         [Description("Smooth")]
         Smooth = 0,
-        [Description("Snap 90�")]
+        [Description("Snap 90°")]
         Snap90,
-        [Description("Snap 45�")]
+        [Description("Snap 45°")]
         Snap45,
-        [Description("Snap 30�")]
+        [Description("Snap 30°")]
         Snap30,
-        [Description("Snap 22.5�")]
+        [Description("Snap 22.5°")]
         Snap225
     }
 

@@ -207,7 +207,7 @@ namespace Arteranos.Core
         public byte[] UserSignKeyPair = null;
 
         // The display name of the user. Generate if null
-        public string Nickname { get; set; } = SessionConstants.Instance.DefaultUserName;
+        public string Nickname { get; set; } = null;
 
         // The user's 2D Icon.
         public Cid UserIconCid { get; set; } = null;
@@ -326,8 +326,6 @@ namespace Arteranos.Core
     {
         #region Change events
 
-        public const string PATH_CLIENT_SETTINGS = "UserSettings.json";
-
         public event Action<string, float> OnAvatarChanged;
         public event Action<bool> OnVRModeChanged;
         public event Action<float, float> OnPrivacyBubbleChanged;
@@ -363,13 +361,7 @@ namespace Arteranos.Core
         private CryptoMessageHandler CMH = null;
 
         [JsonIgnore]
-        public PublicKey UserSignPublicKey => CMH.SignPublicKey;
-
-        [JsonIgnore]
         public PublicKey UserAgrPublicKey => CMH.AgreePublicKey;
-
-        [JsonIgnore]
-        public UserID MeUserID => new(UserSignPublicKey, Me.Nickname, Me.UserIconCid);
 
         [JsonIgnore]
         public override bool VRMode
@@ -381,6 +373,15 @@ namespace Arteranos.Core
                 if(old != VRMode) OnVRModeChanged?.Invoke(VRMode);
             }
         }
+
+        [JsonIgnore]
+        private UserIDJSON _UserIDJSON = null;
+
+        [JsonIgnore]
+        public UserID MeUserID => _UserIDJSON;
+
+        [JsonIgnore]
+        public PublicKey UserSignPublicKey => _UserIDJSON;
 
         public override float SizeBubbleFriends
         {
@@ -503,14 +504,18 @@ namespace Arteranos.Core
         // ---------------------------------------------------------------
         #region Save & Load
 
+        public const string PATH_CLIENT_SETTINGS = "UserSettings.json";
+
         public void Save()
         {
             try
             {
+                _UserIDJSON.Save(json => ConfigUtils.WriteTextConfig(UserIDJSON.PATH_USER_ID, json));
+
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 ConfigUtils.WriteTextConfig(PATH_CLIENT_SETTINGS, json);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.LogWarning($"Failed to save user settings: {e.Message}");
             }
@@ -531,21 +536,36 @@ namespace Arteranos.Core
                 cs = new();
             }
 
+            cs._UserIDJSON = UserIDJSON.Load(() => ConfigUtils.ReadTextConfig(UserIDJSON.PATH_USER_ID));
+
+            bool needUserIDUpdate = false;
+
+            // If there isn't a UserID.json file or it's invalid...
+            if (!cs._UserIDJSON)
             {
-
-                SignKey userKey;
-                if (cs.Me.UserSignKeyPair == null)
+                // ... Try to use the legacy data
+                cs._UserIDJSON = new()
                 {
-                    userKey = SignKey.Generate();
-                    userKey.ExportPrivateKey(out cs.Me.UserSignKeyPair);
+                    SignKeyPair = cs.Me.UserSignKeyPair,
+                    Nickname = cs.Me.Nickname,
+                    Icon = cs.Me.UserIconCid
+                };
 
-                    cs.Save();
-                }
-                else
-                    userKey = SignKey.ImportPrivateKey(cs.Me.UserSignKeyPair);
-
-                cs.CMH = new(userKey);
+                needUserIDUpdate = true;
             }
+
+            // Still a no go. Generate, and save
+            if (!cs._UserIDJSON)
+            {
+                cs._UserIDJSON = UserIDJSON.Generate();
+                cs._UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
+                needUserIDUpdate = true;
+            }
+
+            if(needUserIDUpdate)
+                cs._UserIDJSON.Save(json => ConfigUtils.WriteTextConfig(UserIDJSON.PATH_USER_ID, json));
+
+            cs.CMH = new((SignKey) cs._UserIDJSON);
 
             return cs;
         }

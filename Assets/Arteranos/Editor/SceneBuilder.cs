@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Ipfs;
 using Arteranos.Core.Operations;
 using Arteranos.Services;
+using Arteranos.Common;
 
 namespace Arteranos.Editor
 {
@@ -97,7 +98,7 @@ namespace Arteranos.Editor
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
-            screenshotFile = Common.FileSelectionField(
+            screenshotFile = SDK.Editor.Common.FileSelectionField(
                 new GUIContent("Screenshot"),
                 false,
                 false,
@@ -108,7 +109,7 @@ namespace Arteranos.Editor
                 TakeScreenshot();
             }
 
-            targetFile = Common.FileSelectionField(
+            targetFile = SDK.Editor.Common.FileSelectionField(
                 new GUIContent("Target Zip File"),
                 false,
                 true,
@@ -378,7 +379,7 @@ namespace Arteranos.Editor
 
             metadata.Created = DateTime.Now;
 
-            Common.BuildAssetBundle(
+            SDK.Editor.Common.BuildAssetBundle(
                 gatheredAssets.ToArray(),
                 targets,
                 itemPath,
@@ -396,7 +397,7 @@ namespace Arteranos.Editor
                 return;
             }
 
-            string worldZipName = Common.OpenFileDialog("", false, false, ".zip");
+            string worldZipName = SDK.Editor.Common.OpenFileDialog("", false, false, ".zip");
             if(string.IsNullOrEmpty(worldZipName)) return;
 
             SessionState.SetString("ENTER_TEST_WORLD", $"file:///{worldZipName}");

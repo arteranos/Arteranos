@@ -21,7 +21,7 @@ namespace Arteranos.Editor
             string path = Path.Combine(picpath, name);
             using Stream fs = File.Create(path);
 
-            EditorUtilities.TakeSceneViewPhotoStream(fs);
+            SDK.Editor.EditorUtilities.TakeSceneViewPhotoStream(fs);
         }
     }
 }

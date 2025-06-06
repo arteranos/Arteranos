@@ -5,6 +5,7 @@
  * residing in the LICENSE.md file in the project's root directory.
  */
 
+using Arteranos.Common;
 using Arteranos.Core;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -66,8 +67,8 @@ namespace Arteranos.XR
             d = Mathf.Clamp01(d / VelocityMax);
             pos = t.position;
 
-            Utils.Tween(ref BlinderStrength, d, BlinderDuration);
-            Utils.Tween(ref FadeStrength, FadeTargetStrength, FadeDuration);
+            Core.Utils.Tween(ref BlinderStrength, d, BlinderDuration);
+            Core.Utils.Tween(ref FadeStrength, FadeTargetStrength, FadeDuration);
 
             // Too much hassle to pick out the vignette. Just use the whole global volume.
             if (BlinderVolume != null) BlinderVolume.weight = BlinderStrength * BlindersMaxValue;

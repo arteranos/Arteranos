@@ -13,6 +13,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 using Arteranos.Core;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
+using Arteranos.Common;
 
 namespace Arteranos.XR
 {
@@ -110,7 +111,7 @@ namespace Arteranos.XR
             }
 
             MoveProvider.useGravity = !(sp.Flying ?? false                               // User preferences
-                && (Utils.IsAbleTo(Social.UserCapabilities.CanEnableFly, null)));        // Server restrictions (no server = true)
+                && Core.Utils.IsAbleTo(Social.UserCapabilities.CanEnableFly, null));        // Server restrictions (no server = true)
 
             TurnType turnType = mcs.Turn;
             StartCoroutine(ReconfigureTurnType(turnType));

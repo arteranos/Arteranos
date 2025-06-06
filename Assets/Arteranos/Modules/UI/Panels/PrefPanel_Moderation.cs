@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using System.Linq;
 using Arteranos.Core.Managed;
+using Arteranos.Common;
 
 namespace Arteranos.UI
 {

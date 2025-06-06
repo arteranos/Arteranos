@@ -15,21 +15,6 @@ namespace Arteranos.Core
     public static class Extensions
     {
         /// <summary>
-        /// Returns a relevance index for the comparison.
-        /// </summary>
-        /// <param name="setting">The server settings</param>
-        /// <param name="user">The user's search filter</param>
-        /// <returns>5 for an exact determinate match, 1 for an inexact match, 0 for a mismatch</returns>
-        public static int FuzzyEq(this bool? setting, bool? user)
-        {
-            if(setting == null &&  user == null) return 2;
-
-            if(setting == null || user == null) return 1;
-
-            return (setting == user) ? 5 : 0;
-        }
-
-        /// <summary>
         /// Finds the transform in the hierarchy tree by name, including searching the
         /// entire subtree below.
         /// </summary>

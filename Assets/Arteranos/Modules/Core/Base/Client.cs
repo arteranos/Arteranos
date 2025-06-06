@@ -510,7 +510,7 @@ namespace Arteranos.Core
         {
             try
             {
-                _UserIDJSON.Save(json => ConfigUtils.WriteTextConfig(UserIDJSON.PATH_USER_ID, json));
+                _UserIDJSON.Save();
 
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 ConfigUtils.WriteTextConfig(PATH_CLIENT_SETTINGS, json);
@@ -536,7 +536,7 @@ namespace Arteranos.Core
                 cs = new();
             }
 
-            cs._UserIDJSON = UserIDJSON.Load(() => ConfigUtils.ReadTextConfig(UserIDJSON.PATH_USER_ID));
+            cs._UserIDJSON = UserIDJSON.Load();
 
             bool needUserIDUpdate = false;
 
@@ -563,7 +563,7 @@ namespace Arteranos.Core
             }
 
             if(needUserIDUpdate)
-                cs._UserIDJSON.Save(json => ConfigUtils.WriteTextConfig(UserIDJSON.PATH_USER_ID, json));
+                cs._UserIDJSON.Save();
 
             cs.CMH = new((SignKey) cs._UserIDJSON);
 

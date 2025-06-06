@@ -26,32 +26,30 @@ namespace Arteranos.Core
 
 #endif
 
+        // These are _string constants_. Why aren't they callable from worker threads?!
         private static readonly string _persistentDataPath = Application.persistentDataPath;
         private static readonly string _temporaryCachePath = Application.temporaryCachePath;
+        private static readonly string _productName = Application.productName;
 
 #pragma warning disable IDE1006 // Benennungsstile
-        public static string persistentDataPath
-        { 
-            get 
-            {
-                return Unity_Server
-                    ? _persistentDataPath + "_DedicatedServer"
-                    : _persistentDataPath;
-            } 
-        }
+        // Arteranos.Common and SDK MAY be included into other projects (like, premade worlds) with different names.
+        // So remove the project name from the path and replace it with Arteranos
 
-        public static string temporaryCachePath
+        public static string GetPathWithArteranos(string providedPathName, bool? isServer)
         {
-            get
-            {
-                return Unity_Server
-                    ? _temporaryCachePath + "_DedicatedServer"
-                    : _temporaryCachePath;
-            }
+            string destName = isServer ?? Unity_Server
+                ? "Arteranos_DedicatedServer"
+                : "Arteranos";
+
+            return $"{providedPathName[0..^_productName.Length]}{destName}";
         }
+        public static string persistentDataPath => GetPathWithArteranos(_persistentDataPath, null);
+
+        public static string temporaryCachePath => GetPathWithArteranos(_temporaryCachePath, null);
+
 #pragma warning restore IDE1006 // Benennungsstile
 
-        public static bool NeedsFallback(string path) 
+        public static bool NeedsFallback(string path)
             => Unity_Server && !File.Exists($"{persistentDataPath}/{path}");
 
         public static byte[] ReadBytesConfig(string path) => ReadConfig(path, File.ReadAllBytes);
@@ -82,7 +80,7 @@ namespace Arteranos.Core
                 Debug.LogWarning($"{fullPath} doesn't exist - falling back to regular file.");
             }
 
-            fullPath = $"{_persistentDataPath}/{path}";
+            fullPath = $"{GetPathWithArteranos(_persistentDataPath, false)}/{path}";
             return reader(fullPath);
         }
 

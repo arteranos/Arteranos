@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Arteranos.Common;
 using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
 using ProtoBuf;

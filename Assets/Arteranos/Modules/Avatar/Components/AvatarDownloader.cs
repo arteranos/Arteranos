@@ -16,6 +16,7 @@ using DitzelGames.FastIK;
 using Newtonsoft.Json;
 using Arteranos.Core;
 using Arteranos.Core.Managed;
+using Arteranos.Common;
 
 namespace Arteranos.Avatar
 {
@@ -360,7 +361,7 @@ namespace Arteranos.Avatar
             context.EyeHeight = context.CenterEye.position.y;
 
             // Get the overall rating about the avatar
-            Utils.RateGameObject(context.Avatar, warningLevels, errorLevels, context);
+            Core.Utils.RateGameObject(context.Avatar, warningLevels, errorLevels, context);
 
             return Task.FromResult<Context>(context);
         }
@@ -550,7 +551,7 @@ namespace Arteranos.Avatar
         }
 
         public string GetAvatarCacheFile(Cid cid)
-            => $"{ConfigUtils.temporaryCachePath}/AvatarCache/{Utils.GetURLHash(cid)}.glb";
+            => $"{ConfigUtils.temporaryCachePath}/AvatarCache/{Core.Utils.GetURLHash(cid)}.glb";
 
         public GameObject GetLoadedAvatar(Context _context)
             => (_context as AvatarDownloaderContext).Avatar;

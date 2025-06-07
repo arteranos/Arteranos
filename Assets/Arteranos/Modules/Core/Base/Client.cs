@@ -204,12 +204,15 @@ namespace Arteranos.Core
     public class UserDataSettingsJSON
     {
         // User's signature key pair
+        [Obsolete("Use UserIDJSON to access the user's data")]
         public byte[] UserSignKeyPair = null;
 
         // The display name of the user. Generate if null
+        [Obsolete("Use UserIDJSON to access the user's data")]
         public string Nickname { get; set; } = null;
 
         // The user's 2D Icon.
+        [Obsolete("Use UserIDJSON to access the user's data")]
         public Cid UserIconCid { get; set; } = null;
 
         // Current avatar
@@ -285,6 +288,7 @@ namespace Arteranos.Core
         public virtual ClientAudioSettingsJSON AudioSettings { get; set; } = new();
 
         // The content filter preferences for sorting the servers
+        [Obsolete("Use Permissions to access User Content Preferences")]
         public virtual ServerPermissions ContentFilterPreferences { get; set; } = new(true);
 
         // The controls settings
@@ -378,10 +382,16 @@ namespace Arteranos.Core
         private UserIDJSON _UserIDJSON = null;
 
         [JsonIgnore]
+        private ServerPermissions _Permissions = null;
+
+        [JsonIgnore]
         public UserID MeUserID => _UserIDJSON;
 
         [JsonIgnore]
         public PublicKey UserSignPublicKey => _UserIDJSON;
+
+        [JsonIgnore]
+        public ServerPermissions Permissions => _Permissions;
 
         public override float SizeBubbleFriends
         {
@@ -510,7 +520,9 @@ namespace Arteranos.Core
         {
             try
             {
+                // TODO Remove when PrefPanel_Me saved UserID separetely.
                 _UserIDJSON.Save();
+                _Permissions.Save();
 
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 ConfigUtils.WriteTextConfig(PATH_CLIENT_SETTINGS, json);
@@ -530,12 +542,46 @@ namespace Arteranos.Core
                 string json = ConfigUtils.ReadTextConfig(PATH_CLIENT_SETTINGS);
                 cs = JsonConvert.DeserializeObject<Client>(json);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.LogWarning($"Failed to load user settings: {e.Message}");
                 cs = new();
             }
 
+            LoadUserID(cs);
+
+            LoadPermissions(cs);
+
+            cs.CMH = new((SignKey)cs._UserIDJSON);
+
+            return cs;
+        }
+
+        private static void LoadPermissions(Client cs)
+        {
+            cs._Permissions = ServerPermissions.Load();
+
+            bool needPermissionsUpdate = false;
+
+            if (cs._Permissions == null)
+            {
+                cs._Permissions = cs.ContentFilterPreferences;
+
+                needPermissionsUpdate = true;
+            }
+
+            if (cs._Permissions == null)
+            {
+                cs._Permissions = new();
+
+                needPermissionsUpdate = true;
+            }
+
+            if (needPermissionsUpdate) cs._Permissions.Save();
+        }
+
+        private static void LoadUserID(Client cs)
+        {
             cs._UserIDJSON = UserIDJSON.Load();
 
             bool needUserIDUpdate = false;
@@ -562,12 +608,7 @@ namespace Arteranos.Core
                 needUserIDUpdate = true;
             }
 
-            if(needUserIDUpdate)
-                cs._UserIDJSON.Save();
-
-            cs.CMH = new((SignKey) cs._UserIDJSON);
-
-            return cs;
+            if (needUserIDUpdate) cs._UserIDJSON.Save();
         }
 
         public static void UpdateServerPass(ServerInfo serverInfo, bool TOS, byte[] serverKey)

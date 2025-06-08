@@ -535,11 +535,11 @@ namespace Arteranos.Services
             {
                 SequenceNumber = msg.SequenceNumber,
 
-                Nickname = cs.Me.Nickname,
+                Nickname = cs.MeUserID,
+                ClientSignPublicKey = cs.MeUserID,
+                UserIconCid = cs.MeUserID,
                 deviceUID = SystemInfo.deviceUniqueIdentifier,
-                ClientSignPublicKey = cs.UserSignPublicKey,
-                ClientAgreePublicKey = cs.UserAgrPublicKey,
-                UserIconCid = cs.Me.UserIconCid
+                ClientAgreePublicKey = cs.UserAgrPublicKey
             };
 
             using MemoryStream ms = new();

@@ -128,7 +128,7 @@ namespace Arteranos.WorldEdit
                 //WorldDownloader's info may be outdated if we fell back to offline.
                 if (G.World.World == null)
                 {
-                    lbl_Author.text = G.Client.MeUserID;
+                    lbl_Author.text = (string) G.Client.UserIDJSON;
                     worldTemplateCid = null;
                     lbl_Template.text = "None";
                 }
@@ -153,7 +153,7 @@ namespace Arteranos.WorldEdit
                 // As long as the user changes the name, we need the "updated" tag.
                 needUpdateTag = true;
 
-                bool canAdmin = G.WorldEditorData.WorldAccessInfo.CanAdmin(G.Client.MeUserID);
+                bool canAdmin = G.WorldEditorData.WorldAccessInfo.CanAdmin(G.Client.UserIDJSON);
                 btn_Permissions.gameObject.SetActive(canAdmin);
                 lbl_NoPermissionsNotice.gameObject.SetActive(!canAdmin);
 
@@ -284,7 +284,7 @@ namespace Arteranos.WorldEdit
 
             WorldInfo wi = new()
             {
-                Author = G.Client.MeUserID,
+                Author = G.Client.UserIDJSON,
                 ContentRating = G.WorldEditorData.ContentWarning,
                 Created = DateTime.UtcNow,
                 WorldName = worldName,

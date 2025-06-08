@@ -34,7 +34,7 @@ namespace Arteranos.WorldEdit
                 img_Icon.Path = (Cid)m_UserID;
 
                 // Prevent pulling the rug under yourself
-                bool otherone = m_UserID != G.Client.MeUserID;
+                bool otherone = m_UserID != G.Client.UserIDJSON;
                 spn_Permission.enabled = otherone;
                 btn_Remove.interactable = otherone;
             }

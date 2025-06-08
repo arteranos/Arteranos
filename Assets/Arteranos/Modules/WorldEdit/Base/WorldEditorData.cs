@@ -104,7 +104,7 @@ namespace Arteranos.WorldEdit
 
             if (KMWorldEditorActions == null) return;
 
-            UserID meUserID = G.Client.MeUserID;
+            UserID meUserID = G.Client.UserIDJSON;
 
             IWorldDecoration id = G.World.World?.DecorationContent.Result;
             WorldInfo info = id?.Info;

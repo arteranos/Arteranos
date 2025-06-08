@@ -239,7 +239,7 @@ namespace Arteranos.Core
                 return;
             }
 
-            UserID userID = cs.MeUserID;
+            UserID userID = cs.UserIDJSON;
             ServerUserState user = new()
             {
                 userID = userID,

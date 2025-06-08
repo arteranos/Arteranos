@@ -19,6 +19,7 @@ using Ipfs.Cryptography.Proto;
 using System.Collections.Generic;
 using Arteranos.Services;
 using Arteranos.Common;
+using Ipfs;
 
 namespace Arteranos.Avatar
 {
@@ -241,7 +242,7 @@ namespace Arteranos.Avatar
 
             UserPrivacy = cs.UserPrivacy;
 
-            UserIcon = cs.Me.UserIconCid;
+            UserIcon = (Cid) cs.UserIDJSON;
         }
 
         #endregion

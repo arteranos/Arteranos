@@ -203,17 +203,14 @@ namespace Arteranos.Core
 
     public class UserDataSettingsJSON
     {
-        // User's signature key pair
-        [Obsolete("Use UserIDJSON to access the user's data")]
-        public byte[] UserSignKeyPair = null;
+        // LEGACY - User's signature key pair
+        public byte[] UserSignKeyPair { get; protected set; } = null;
 
-        // The display name of the user. Generate if null
-        [Obsolete("Use UserIDJSON to access the user's data")]
-        public string Nickname { get; set; } = null;
+        // LEGACY - The display name of the user. Generate if null
+        public string Nickname { get; protected set; } = null;
 
-        // The user's 2D Icon.
-        [Obsolete("Use UserIDJSON to access the user's data")]
-        public Cid UserIconCid { get; set; } = null;
+        // LEGACY - The user's 2D Icon.
+        public Cid UserIconCid { get; protected set; } = null;
 
         // Current avatar
         public AvatarDescriptionJSON CurrentAvatar { get; set; } = new() 
@@ -264,7 +261,7 @@ namespace Arteranos.Core
     public class ClientSettingsJSON
     {
         // More personal data
-        public virtual UserDataSettingsJSON Me { get; set; } = new();
+        public virtual UserDataSettingsJSON Me { get; protected set; } = new();
 
         // Guides the online and availability state
         // public virtual Visibility Visibility { get; set; } = Visibility.Online;
@@ -289,7 +286,7 @@ namespace Arteranos.Core
 
         // The content filter preferences for sorting the servers
         [Obsolete("Use Permissions to access User Content Preferences")]
-        public virtual ServerPermissions ContentFilterPreferences { get; set; } = new(true);
+        public virtual ServerPermissions ContentFilterPreferences { get; protected set; } = new(true);
 
         // The controls settings
         public virtual ControlSettingsJSON Controls { get; set; } = new();
@@ -379,19 +376,10 @@ namespace Arteranos.Core
         }
 
         [JsonIgnore]
-        private UserIDJSON _UserIDJSON = null;
+        public UserIDJSON UserIDJSON { get; private set; } = null;
 
         [JsonIgnore]
-        private ServerPermissions _Permissions = null;
-
-        [JsonIgnore]
-        public UserID MeUserID => _UserIDJSON;
-
-        [JsonIgnore]
-        public PublicKey UserSignPublicKey => _UserIDJSON;
-
-        [JsonIgnore]
-        public ServerPermissions Permissions => _Permissions;
+        public ServerPermissions Permissions { get; private set; } = null;
 
         public override float SizeBubbleFriends
         {
@@ -423,7 +411,7 @@ namespace Arteranos.Core
             }
         }
 
-        public void PingXRControllersChanged() => OnXRControllerChanged?.Invoke(Controls, Movement, ContentFilterPreferences);
+        public void PingXRControllersChanged() => OnXRControllerChanged?.Invoke(Controls, Movement, Permissions);
 
         public void PingUserHUDChanged() => OnUserHUDSettingsChanged?.Invoke(UserHUD);
 
@@ -433,7 +421,7 @@ namespace Arteranos.Core
         // ---------------------------------------------------------------
         #region Crypto operations
 
-        public string GetFingerprint(string fmt = null) => CryptoHelpers.ToString(fmt, UserSignPublicKey.Serialize());
+        public string GetFingerprint(string fmt = null) => CryptoHelpers.ToString(fmt, ((PublicKey) UserIDJSON).Serialize());
         public static void TransmitMessage(byte[] data, PublicKey receiver, out CMSPacket messageData)
             => G.Client.CMH.TransmitMessage(data, receiver, out messageData);
         public static void ReceiveMessage(CMSPacket messageData, out byte[] data, out PublicKey signerPublicKey)
@@ -521,8 +509,8 @@ namespace Arteranos.Core
             try
             {
                 // TODO Remove when PrefPanel_Me saved UserID separetely.
-                _UserIDJSON.Save();
-                _Permissions.Save();
+                UserIDJSON.Save();
+                Permissions.Save();
 
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 ConfigUtils.WriteTextConfig(PATH_CLIENT_SETTINGS, json);
@@ -552,45 +540,45 @@ namespace Arteranos.Core
 
             LoadPermissions(cs);
 
-            cs.CMH = new((SignKey)cs._UserIDJSON);
+            cs.CMH = new((SignKey)cs.UserIDJSON);
 
             return cs;
         }
 
         private static void LoadPermissions(Client cs)
         {
-            cs._Permissions = ServerPermissions.Load();
+            cs.Permissions = ServerPermissions.Load();
 
             bool needPermissionsUpdate = false;
 
-            if (cs._Permissions == null)
+            if (cs.Permissions == null)
             {
-                cs._Permissions = cs.ContentFilterPreferences;
+                cs.Permissions = cs.ContentFilterPreferences;
 
                 needPermissionsUpdate = true;
             }
 
-            if (cs._Permissions == null)
+            if (cs.Permissions == null)
             {
-                cs._Permissions = new();
+                cs.Permissions = new();
 
                 needPermissionsUpdate = true;
             }
 
-            if (needPermissionsUpdate) cs._Permissions.Save();
+            if (needPermissionsUpdate) cs.Permissions.Save();
         }
 
         private static void LoadUserID(Client cs)
         {
-            cs._UserIDJSON = UserIDJSON.Load();
+            cs.UserIDJSON = UserIDJSON.Load();
 
             bool needUserIDUpdate = false;
 
             // If there isn't a UserID.json file or it's invalid...
-            if (!cs._UserIDJSON)
+            if (!cs.UserIDJSON)
             {
                 // ... Try to use the legacy data
-                cs._UserIDJSON = new()
+                cs.UserIDJSON = new()
                 {
                     SignKeyPair = cs.Me.UserSignKeyPair,
                     Nickname = cs.Me.Nickname,
@@ -601,14 +589,14 @@ namespace Arteranos.Core
             }
 
             // Still a no go. Generate, and save
-            if (!cs._UserIDJSON)
+            if (!cs.UserIDJSON)
             {
-                cs._UserIDJSON = UserIDJSON.Generate();
-                cs._UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
+                cs.UserIDJSON = UserIDJSON.Generate();
+                cs.UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
                 needUserIDUpdate = true;
             }
 
-            if (needUserIDUpdate) cs._UserIDJSON.Save();
+            if (needUserIDUpdate) cs.UserIDJSON.Save();
         }
 
         public static void UpdateServerPass(ServerInfo serverInfo, bool TOS, byte[] serverKey)

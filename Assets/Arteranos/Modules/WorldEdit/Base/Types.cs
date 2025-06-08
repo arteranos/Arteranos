@@ -43,7 +43,7 @@ namespace Arteranos.WorldEdit
 
         public void Serialize(MemoryStream stream)
         {
-            if (info.Author != G.Client.MeUserID)
+            if (info.Author != G.Client.UserIDJSON)
                 throw new InvalidDataException("Cannot serialize: Author mismatch");
 
             signature = null;

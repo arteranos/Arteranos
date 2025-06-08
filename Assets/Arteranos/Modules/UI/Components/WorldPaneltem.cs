@@ -76,7 +76,7 @@ namespace Arteranos.UI
                     yield break;
                 }
 
-                if (!World.CanView(G.Client.MeUserID))
+                if (!World.CanView(G.Client.UserIDJSON))
                 {
                     Hidden = true;
                     lbl_Caption.text = "(not viewable)";
@@ -111,7 +111,7 @@ namespace Arteranos.UI
                 && AllowedForThis
                 && !G.World.ChangeInProgress);
 
-            bool pinnable = !World.IsFavourited && World.CanPin(G.Client.MeUserID);
+            bool pinnable = !World.IsFavourited && World.CanPin(G.Client.UserIDJSON);
 
             btn_Add.gameObject.SetActive(pinnable);
             btn_Delete.gameObject.SetActive(World.IsFavourited);

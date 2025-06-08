@@ -198,7 +198,7 @@ namespace Arteranos.UI
                 }
 
                 // User and server icons
-                toPin.Add(G.Client.Me.UserIconCid);
+                toPin.Add((Cid) G.Client.UserIDJSON);
                 toPin.Add(G.Server.ServerIcon);
 
                 // Current avatar

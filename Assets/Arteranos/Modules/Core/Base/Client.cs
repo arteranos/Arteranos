@@ -204,13 +204,13 @@ namespace Arteranos.Core
     public class UserDataSettingsJSON
     {
         // LEGACY - User's signature key pair
-        public byte[] UserSignKeyPair { get; protected set; } = null;
+        public byte[] UserSignKeyPair { get; set; } = null;
 
         // LEGACY - The display name of the user. Generate if null
-        public string Nickname { get; protected set; } = null;
+        public string Nickname { get; set; } = null;
 
         // LEGACY - The user's 2D Icon.
-        public Cid UserIconCid { get; protected set; } = null;
+        public Cid UserIconCid { get; set; } = null;
 
         // Current avatar
         public AvatarDescriptionJSON CurrentAvatar { get; set; } = new() 
@@ -286,7 +286,7 @@ namespace Arteranos.Core
 
         // The content filter preferences for sorting the servers
         [Obsolete("Use Permissions to access User Content Preferences")]
-        public virtual ServerPermissions ContentFilterPreferences { get; protected set; } = new(true);
+        public virtual ServerPermissions ContentFilterPreferences { get; set; } = new(true);
 
         // The controls settings
         public virtual ControlSettingsJSON Controls { get; set; } = new();
@@ -572,8 +572,6 @@ namespace Arteranos.Core
         {
             cs.UserIDJSON = UserIDJSON.Load();
 
-            bool needUserIDUpdate = false;
-
             // If there isn't a UserID.json file or it's invalid...
             if (!cs.UserIDJSON)
             {
@@ -585,7 +583,6 @@ namespace Arteranos.Core
                     Icon = cs.Me.UserIconCid
                 };
 
-                needUserIDUpdate = true;
             }
 
             // Still a no go. Generate, and save
@@ -593,10 +590,9 @@ namespace Arteranos.Core
             {
                 cs.UserIDJSON = UserIDJSON.Generate();
                 cs.UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
-                needUserIDUpdate = true;
             }
 
-            if (needUserIDUpdate) cs.UserIDJSON.Save();
+            cs.UserIDJSON.Save();
         }
 
         public static void UpdateServerPass(ServerInfo serverInfo, bool TOS, byte[] serverKey)

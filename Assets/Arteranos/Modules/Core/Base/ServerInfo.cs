@@ -105,7 +105,7 @@ namespace Arteranos.Core
         {
             get
             {
-                (int ms, int _) = Permissions.MatchRatio(G.Client.ContentFilterPreferences);
+                (int ms, int _) = Permissions.MatchRatio(G.Client.Permissions);
                 return ms + FriendCount * 3;
             }
         }

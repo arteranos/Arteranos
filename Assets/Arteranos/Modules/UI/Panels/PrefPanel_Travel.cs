@@ -32,7 +32,7 @@ namespace Arteranos.UI
             btn_ServerGallery.onClick.AddListener(() => ActionRegistry.Call("serverList"));
             btn_SetContent.onClick.AddListener(() => ActionRegistry.Call(
                 "contentFilter",
-                G.Client.ContentFilterPreferences,
+                G.Client.Permissions,
                 callback: r => G.Client?.Save()));
             chk_AllowCustomTOS.onValueChanged.AddListener(OnCustomTOSToggled);
         }

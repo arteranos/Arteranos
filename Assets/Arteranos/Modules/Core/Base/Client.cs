@@ -592,6 +592,7 @@ namespace Arteranos.Core
                 cs.UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
             }
 
+            // Save if it's newly generated or imported from legacy data
             cs.UserIDJSON.Save();
         }
 

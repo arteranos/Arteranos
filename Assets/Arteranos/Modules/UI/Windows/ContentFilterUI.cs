@@ -148,7 +148,7 @@ namespace Arteranos.UI
             };
         }
 
-        private readonly Dictionary<string, FieldInfo> spjfields = new();
+        private readonly Dictionary<string, PropertyInfo> spjfields = new();
 
         public override void Called(object data)
         {
@@ -158,8 +158,8 @@ namespace Arteranos.UI
 
             Debug.Assert(spj != null, "No association of the Content Filter UI");
 
-            FieldInfo[] fields = spj.GetType().GetFields();
-            foreach (FieldInfo field in fields) spjfields[field.Name] = field;
+            PropertyInfo[] fields = spj.GetType().GetProperties();
+            foreach (PropertyInfo field in fields) spjfields[field.Name] = field;
 
             Transform ConfigColumn = tbl_Table.GetChild(2);
 

@@ -549,23 +549,19 @@ namespace Arteranos.Core
         {
             cs.Permissions = ServerPermissions.Load();
 
-            bool needPermissionsUpdate = false;
-
             if (cs.Permissions == null)
             {
                 cs.Permissions = cs.ContentFilterPreferences;
 
-                needPermissionsUpdate = true;
+                // Fiddle with one bit to set the dirty flag
+                cs.Permissions.Flying = !cs.Permissions.Flying;
+                cs.Permissions.Flying = !cs.Permissions.Flying;
             }
 
             if (cs.Permissions == null)
-            {
                 cs.Permissions = new();
 
-                needPermissionsUpdate = true;
-            }
-
-            if (needPermissionsUpdate) cs.Permissions.Save();
+            cs.Permissions.Save();
         }
 
         private static void LoadUserID(Client cs)

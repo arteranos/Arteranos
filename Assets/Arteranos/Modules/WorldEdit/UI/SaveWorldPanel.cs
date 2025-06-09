@@ -67,15 +67,15 @@ namespace Arteranos.WorldEdit
             txt_WorldDescription.onValueChanged.AddListener(GotWorldDescriptionChange);
 
             chk_Violence.onValueChanged.AddListener(
-                b => GotCWChanged(b, ref G.WorldEditorData.ContentWarning.Violence));
+                b => GotCWChanged(b, r => G.WorldEditorData.ContentWarning.Violence = r));
             chk_Nudity.onValueChanged.AddListener(
-                b => GotCWChanged(b, ref G.WorldEditorData.ContentWarning.Nudity));
+                b => GotCWChanged(b, r => G.WorldEditorData.ContentWarning.Nudity = r));
             chk_Suggestive.onValueChanged.AddListener(
-                b => GotCWChanged(b, ref G.WorldEditorData.ContentWarning.Suggestive));
+                b => GotCWChanged(b, r => G.WorldEditorData.ContentWarning.Suggestive = r));
             chk_ExViolence.onValueChanged.AddListener(
-                b => GotCWChanged(b, ref G.WorldEditorData.ContentWarning.ExcessiveViolence));
+                b => GotCWChanged(b, r => G.WorldEditorData.ContentWarning.ExcessiveViolence = r));
             chk_ExNudity.onValueChanged.AddListener(
-                b => GotCWChanged(b, ref G.WorldEditorData.ContentWarning.ExplicitNudes));
+                b => GotCWChanged(b, r => G.WorldEditorData.ContentWarning.ExplicitNudes = r));
 
             btn_Permissions.onClick.AddListener(GotPermissionClick);
 
@@ -99,7 +99,7 @@ namespace Arteranos.WorldEdit
             ActionRegistry.Call("worldPermissionsEditor");
         }
 
-        private void GotCWChanged(bool b, ref bool? cwItem) => cwItem = b;
+        private void GotCWChanged(bool b, Action<bool?> cwItem) => cwItem(b);
 
         private void GotWorldNameChange(string name)
         {
@@ -182,23 +182,23 @@ namespace Arteranos.WorldEdit
 
         private void RefreshContentWarning()
         {
-            static void PresetPermission(Toggle tg, bool? perm, ref bool? cw)
+            static void PresetPermission(Toggle tg, bool? perm, Func<bool?> getter, Action<bool?> setter)
             {
                 if (perm == null) // Server says, don't care
                 {
                     tg.interactable = true;
-                    tg.isOn = cw ?? false;
+                    tg.isOn = getter() ?? false;
                 }
                 else if (perm == false) // Server forbids the content
                 {
                     tg.interactable = false;
                     tg.isOn = false;
-                    cw = false;
+                    setter(false);
                 }
                 else if (perm == true) // Server allows the content, maybe even likely in use
                 {
                     tg.interactable = true;
-                    tg.isOn = cw ?? true;
+                    tg.isOn = getter() ?? true;
                 }
             }
 
@@ -219,11 +219,11 @@ namespace Arteranos.WorldEdit
             // Like, disallowing to build XXX content on a PG-13 server.
             // If the world builder wants to, he'd have to switch servers.
             // Or set up his own.
-            PresetPermission(chk_Violence, p.Violence, ref cw.Violence);
-            PresetPermission(chk_Nudity, p.Nudity, ref cw.Nudity);
-            PresetPermission(chk_Suggestive, p.Suggestive, ref cw.Suggestive);
-            PresetPermission(chk_ExViolence, p.ExcessiveViolence, ref cw.ExcessiveViolence);
-            PresetPermission(chk_ExNudity, p.ExplicitNudes, ref cw.ExplicitNudes);
+            PresetPermission(chk_Violence, p.Violence, () => cw.Violence, r => cw.Violence = r);
+            PresetPermission(chk_Nudity, p.Nudity, () => cw.Nudity, r => cw.Nudity = r);
+            PresetPermission(chk_Suggestive, p.Suggestive, () => cw.Suggestive, r => cw.Suggestive = r);
+            PresetPermission(chk_ExViolence, p.ExcessiveViolence, () => cw.ExcessiveViolence, r => cw.ExcessiveViolence = r);
+            PresetPermission(chk_ExNudity, p.ExplicitNudes, () => cw.ExplicitNudes, r => cw.ExplicitNudes = r);
         }
 
         private void GotSaveInGalleryClick()

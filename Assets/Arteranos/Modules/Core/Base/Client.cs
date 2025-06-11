@@ -285,7 +285,6 @@ namespace Arteranos.Core
         public virtual ClientAudioSettingsJSON AudioSettings { get; set; } = new();
 
         // The content filter preferences for sorting the servers
-        [Obsolete("Use Permissions to access User Content Preferences")]
         public virtual ServerPermissions ContentFilterPreferences { get; set; } = new(true);
 
         // The controls settings
@@ -321,6 +320,39 @@ namespace Arteranos.Core
 
         // The text message templates
         public virtual List<string> PresetStrings { get; set; } = new();
+
+        public const string PATH_CLIENT_SETTINGS = "UserSettings.json";
+
+        public static ClientSettingsJSON Load()
+        {
+            ClientSettingsJSON csj;
+
+            try
+            {
+                string json = ConfigUtils.ReadTextConfig(PATH_CLIENT_SETTINGS);
+                csj = JsonConvert.DeserializeObject<Client>(json);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to load user settings: {e.Message}");
+                csj = new();
+            }
+
+            return csj;
+        }
+
+        public virtual void Save()
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(this, Formatting.Indented);
+                ConfigUtils.WriteTextConfig(PATH_CLIENT_SETTINGS, json);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to save user settings: {e.Message}");
+            }
+        }
     }
 
     public class Client : ClientSettingsJSON
@@ -502,39 +534,18 @@ namespace Arteranos.Core
         // ---------------------------------------------------------------
         #region Save & Load
 
-        public const string PATH_CLIENT_SETTINGS = "UserSettings.json";
-
-        public void Save()
+        public override void Save()
         {
-            try
-            {
-                // TODO Remove when PrefPanel_Me saved UserID separetely.
-                UserIDJSON.Save();
-                Permissions.Save();
+            UserIDJSON.Save();
 
-                string json = JsonConvert.SerializeObject(this, Formatting.Indented);
-                ConfigUtils.WriteTextConfig(PATH_CLIENT_SETTINGS, json);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Failed to save user settings: {e.Message}");
-            }
+            Permissions.Save();
+
+            base.Save();
         }
 
-        public static Client Load()
+        public static new Client Load()
         {
-            Client cs;
-
-            try
-            {
-                string json = ConfigUtils.ReadTextConfig(PATH_CLIENT_SETTINGS);
-                cs = JsonConvert.DeserializeObject<Client>(json);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Failed to load user settings: {e.Message}");
-                cs = new();
-            }
+            Client cs = (Client)ClientSettingsJSON.Load();
 
             LoadUserID(cs);
 

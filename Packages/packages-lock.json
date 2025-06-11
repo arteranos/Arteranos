@@ -429,7 +429,8 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.willneedit.ipfs.iface": "1.0.0"
+        "com.willneedit.ipfs.iface": "1.0.0",
+        "com.unity.nuget.newtonsoft-json": "3.0.0"
       }
     },
     "com.willneedit.arteranos.sdk": {
@@ -437,14 +438,18 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.willneedit.arteranos.common": "1.0.0"
+        "com.willneedit.arteranos.common": "1.0.0",
+        "com.unity.editorcoroutines": "1.0.0",
+        "li.lightingtools.lightmapswitcher": "2.1.0"
       }
     },
     "com.willneedit.ipfs.iface": {
       "version": "file:com.willneedit.ipfs.iface",
       "depth": 0,
       "source": "embedded",
-      "dependencies": {}
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.0"
+      }
     },
     "com.willneedit.mirror": {
       "version": "file:com.willneedit.mirror",

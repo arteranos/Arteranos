@@ -408,7 +408,7 @@ namespace Arteranos.Core
         }
 
         [JsonIgnore]
-        public UserIDJSON UserIDJSON { get; private set; } = null;
+        public UserDataJSON UserIDJSON { get; private set; } = null;
 
         [JsonIgnore]
         public ServerPermissions Permissions { get; private set; } = null;
@@ -577,7 +577,7 @@ namespace Arteranos.Core
 
         private static void LoadUserID(Client cs)
         {
-            cs.UserIDJSON = UserIDJSON.Load();
+            cs.UserIDJSON = UserDataJSON.Load();
 
             // If there isn't a UserID.json file or it's invalid...
             if (!cs.UserIDJSON)
@@ -595,7 +595,7 @@ namespace Arteranos.Core
             // Still a no go. Generate, and save
             if (!cs.UserIDJSON)
             {
-                cs.UserIDJSON = UserIDJSON.Generate();
+                cs.UserIDJSON = UserDataJSON.Generate();
                 cs.UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
             }
 

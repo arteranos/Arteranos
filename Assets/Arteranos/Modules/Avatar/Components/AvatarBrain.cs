@@ -242,7 +242,7 @@ namespace Arteranos.Avatar
 
             UserPrivacy = cs.UserPrivacy;
 
-            UserIcon = (Cid) cs.UserIDJSON;
+            UserIcon = (Cid) G.UserData;
         }
 
         #endregion

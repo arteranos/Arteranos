@@ -57,7 +57,7 @@ namespace Arteranos.UI
             {
                 using MemoryStream ms = new(obj);
                 ms.Position = 0;
-                yield return Asyncs.Async2Coroutine(() => G.IPFSService.AddStream(ms), _fsn => cs.UserIDJSON.Icon = _fsn.Id);
+                yield return Asyncs.Async2Coroutine(() => G.IPFSService.AddStream(ms), _fsn => G.UserData.Icon = _fsn.Id);
 
                 dirty = true;
             }
@@ -78,12 +78,12 @@ namespace Arteranos.UI
             string fpmode = Utils.GetUIDFPEncoding(fpmodeSet);
 
             spn_OnlineStatus.value = Array.IndexOf(spn_OnlineStatus.Options, Utils.GetEnumDescription(cs.UserPrivacy.Visibility));
-            txt_Nickname.text = (string) cs.UserIDJSON;
+            txt_Nickname.text = (string) G.UserData;
 
             tro_UserID.text = cs.GetFingerprint(fpmode);
             sldn_AvatarHeight.value = cs.AvatarHeight;
 
-            bar_IconSelector.IconPath = (Cid) cs.UserIDJSON;
+            bar_IconSelector.IconPath = (Cid) G.UserData;
 
             // Reset the state as it's the initial state, not the blank slate.
             dirty = false;
@@ -94,7 +94,7 @@ namespace Arteranos.UI
             base.OnDisable();
 
             cs.AvatarHeight = sldn_AvatarHeight.value;
-            cs.UserIDJSON.Nickname = txt_Nickname.text;
+            G.UserData.Nickname = txt_Nickname.text;
 
             // Might be to disabled before it's really started, so cs may be null yet.
             if(dirty) cs?.Save();

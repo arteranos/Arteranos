@@ -11,6 +11,7 @@ using Arteranos.Services;
 using Ipfs;
 using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
@@ -75,8 +76,12 @@ namespace Arteranos.Core
                 return def;
             }
 
-            G.Client = Client.Load();
-            G.Server = Server.Load();
+            if (Client.Load() == null)
+                throw new Exception("Internal error - cannot set up client data");
+
+            if (Server.Load() == null)
+                throw new Exception("Internal error - cannot set up server data");
+                
             Command = ScriptableObject.CreateInstance<CommandLine>();
 
             Command.GetCommandlineArgs();

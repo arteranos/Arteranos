@@ -415,7 +415,7 @@ namespace Arteranos.Services
         {
             if (!NetworkClient.active)
                 // Directly slice the packet into the server logic
-                ServerLocalCTSPacket(G.Client.UserIDJSON, packet);
+                ServerLocalCTSPacket(G.UserData, packet);
             else if (G.NetworkStatus.IsClientConnected)
             {
                 // Sign, encrypt and send it off to the connected server

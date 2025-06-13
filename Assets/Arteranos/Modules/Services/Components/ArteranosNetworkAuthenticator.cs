@@ -535,9 +535,9 @@ namespace Arteranos.Services
             {
                 SequenceNumber = msg.SequenceNumber,
 
-                Nickname = (string) cs.UserIDJSON,
-                ClientSignPublicKey = cs.UserIDJSON,
-                UserIconCid = (Cid) cs.UserIDJSON,
+                Nickname = (string) G.UserData,
+                ClientSignPublicKey = G.UserData,
+                UserIconCid = (Cid) G.UserData,
                 deviceUID = SystemInfo.deviceUniqueIdentifier,
                 ClientAgreePublicKey = cs.UserAgrPublicKey
             };

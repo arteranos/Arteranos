@@ -144,6 +144,8 @@ namespace Arteranos.Core
                 ss = new();
             }
 
+            G.Server = ss;
+
             return ss;
         }
 

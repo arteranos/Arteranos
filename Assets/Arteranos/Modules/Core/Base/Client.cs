@@ -16,6 +16,7 @@ using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
 using Ipfs;
 using Arteranos.Common;
+using UnityEngine.InputSystem.EnhancedTouch;
 
 namespace Arteranos.Core
 {
@@ -412,9 +413,6 @@ namespace Arteranos.Core
         }
 
         [JsonIgnore]
-        public UserDataJSON UserIDJSON { get; private set; } = null;
-
-        [JsonIgnore]
         public ServerPermissions Permissions { get; private set; } = null;
 
         public override float SizeBubbleFriends
@@ -457,7 +455,7 @@ namespace Arteranos.Core
         // ---------------------------------------------------------------
         #region Crypto operations
 
-        public string GetFingerprint(string fmt = null) => CryptoHelpers.ToString(fmt, ((PublicKey) UserIDJSON).Serialize());
+        public string GetFingerprint(string fmt = null) => CryptoHelpers.ToString(fmt, ((PublicKey) G.UserData).Serialize());
         public static void TransmitMessage(byte[] data, PublicKey receiver, out CMSPacket messageData)
             => G.Client.CMH.TransmitMessage(data, receiver, out messageData);
         public static void ReceiveMessage(CMSPacket messageData, out byte[] data, out PublicKey signerPublicKey)
@@ -540,7 +538,7 @@ namespace Arteranos.Core
 
         public override void Save()
         {
-            UserIDJSON.Save();
+            G.UserData.Save();
 
             Permissions.Save();
 
@@ -555,7 +553,9 @@ namespace Arteranos.Core
 
             LoadPermissions(cs);
 
-            cs.CMH = new((SignKey)cs.UserIDJSON);
+            cs.CMH = new((SignKey)G.UserData);
+
+            G.Client = cs;
 
             return cs;
         }
@@ -584,13 +584,13 @@ namespace Arteranos.Core
 
         private static void LoadUserID(Client cs)
         {
-            cs.UserIDJSON = UserDataJSON.Load();
+            G.UserData = UserDataJSON.Load();
 
             // If there isn't a UserID.json file or it's invalid...
-            if (!cs.UserIDJSON)
+            if (!G.UserData)
             {
                 // ... Try to use the legacy data
-                cs.UserIDJSON = new()
+                G.UserData = new()
                 {
                     SignKeyPair = cs.Me.UserSignKeyPair,
                     Nickname = cs.Me.Nickname,
@@ -600,14 +600,14 @@ namespace Arteranos.Core
             }
 
             // Still a no go. Generate, and save
-            if (!cs.UserIDJSON)
+            if (!G.UserData)
             {
-                cs.UserIDJSON = UserDataJSON.Generate();
-                cs.UserIDJSON.Nickname = SessionConstants.Instance.DefaultUserName;
+                G.UserData = UserDataJSON.Generate();
+                G.UserData.Nickname = SessionConstants.Instance.DefaultUserName;
             }
 
             // Save if it's newly generated or imported from legacy data
-            cs.UserIDJSON.Save();
+            G.UserData.Save();
 
             // Clear the legacy fields... but don't save, yet.
             cs.Me.UserSignKeyPair = null;

@@ -6,6 +6,7 @@
  */
 
 using Arteranos.Avatar;
+using Arteranos.Common;
 using Arteranos.Core;
 using Arteranos.Core.Managed;
 using Arteranos.Services;
@@ -63,6 +64,7 @@ namespace Arteranos
         public static Server Server { get; set; }
         public static ServerUserBase ServerUsers { get; set; }
         public static Community Community { get; set; } = new();
+        public static UserDataJSON UserData { get; set; }
         // ---------------------------------------------------------------
         public static DefaultAvatar_ DefaultAvatar { get; } = new();
         // ---------------------------------------------------------------

@@ -41,7 +41,7 @@ namespace Arteranos.UI
 
             Client cs = G.Client;
             TypeConverter typeConverter = new UserIDConverter();
-            UserID userID = cs.UserIDJSON;
+            UserID userID = G.UserData;
             string publicUIDstring = (string) typeConverter.ConvertTo(userID, typeof(string));
 
             lbl_Version.text = v.Full;

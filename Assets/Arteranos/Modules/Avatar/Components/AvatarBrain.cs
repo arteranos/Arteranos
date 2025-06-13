@@ -149,24 +149,6 @@ namespace Arteranos.Avatar
 
         public override void OnStartClient()
         {
-            IEnumerator HelloFromRemoteAvatar()
-            {
-                // I'm a remote avatar, and we haven't seen the local user yet.
-                while (G.Me == null)
-                    yield return new WaitForSeconds(1);
-
-                ulong localState = G.Me.GetSocialStateTo(this);
-
-                Debug.Log($"{(string)UserID} (remote) announcing its arrival (local state: {localState})");
-
-                // Now we're talking!
-                G.Me.SendSocialState(this, localState);
-
-                // The other way round?
-                // In the other client, this remote avatar would be the local avatar, and
-                // the local avatar would be the remote avatar.
-            }
-
             Client cs = G.Client;
 
             base.OnStartClient();
@@ -191,9 +173,6 @@ namespace Arteranos.Avatar
             {
                 // Alien avatars get the hit capsules to target them to call up the nameplates.
                 HitBox = Factories.NewHitBox(this);
-
-                // Greet the local user and sync his social state as soon as it arrived
-                StartCoroutine(HelloFromRemoteAvatar());
             }
         }
 
@@ -422,7 +401,6 @@ namespace Arteranos.Avatar
                 if (packet.sender != signerPublicKey)
                     throw new Exception($"Supposed sender {packet.sender} doesn't match its key");
 
-                if (packet is CTCPUserState packetUS) ReactReceivedSSE(packetUS);
                 else if (packet is CTCPTextMessage packetTxt) ReactReceiveTextMessage(packetTxt);
                 else throw new InvalidOperationException("Unknown CTC Packet, discarded");
             }
@@ -437,77 +415,11 @@ namespace Arteranos.Avatar
 
         #endregion
         // ---------------------------------------------------------------
-        #region Social state negotiation
+        #region Text message reception
 
-        public ulong GetSocialStateTo(UserID to)
-        {
-            if (!isLocalPlayer)
-                throw new InvalidOperationException("Not owner");
+        private volatile IDialogUI m_txtMessageBox = null;
 
-            // Maybe not yet fully initialized.
-            if (to == null)
-                return SocialState.None;
-
-            return G.Client.Me.SocialList.TryGetValue(to, out UserSocialEntryJSON state)
-                        ? state.State : SocialState.None;
-        }
-
-        public ulong GetSocialStateTo(IAvatarBrain receiver)
-            => GetSocialStateTo(receiver.UserID);
-
-        private void ReactReceivedSSE(CTCPUserState received)
-        {
-            UserID sender = received.sender;
-            IAvatarBrain senderB = G.NetworkStatus.GetOnlineUser(sender);
-
-            LogDebug($"{(string) sender} updated social status to (his view) {received.state}");
-
-            // Sync with the mirrored social states
-            ulong state = SocialState.ReflectSocialState(received.state, GetSocialStateTo(sender));
-
-            // Save, for now.
-            if (senderB != null)
-                G.Client.SaveSocialStates(sender, state, senderB.UserIcon);
-            else
-                G.Client.SaveSocialStates(sender, state);
-
-            // And take it the immediate effects, like blocking.
-            UpdateSSEffects(senderB, state);
-        }
-
-        public void OfferFriendship(IAvatarBrain receiver, bool offering = true)
-        {
-            ulong state = GetSocialStateTo(receiver.UserID);
-            SocialState.SetFriendState(ref state, offering);
-
-            SendSocialState(receiver, state);
-        }
-
-        public void BlockUser(IAvatarBrain receiver, bool blocking = true)
-        {
-            ulong state = GetSocialStateTo(receiver.UserID);
-            if (blocking)
-                SocialState.SetFriendState(ref state, false);
-
-            SocialState.SetBlockState(ref state, blocking);
-
-            SendSocialState(receiver, state);
-        }
-
-        public void UpdateSSEffects(IAvatarBrain receiver, ulong state)
-        {
-            if(receiver == null) return;
-
-            // You blocked him.
-            bool own_blocked = SocialState.IsBlocked(state);
-            receiver.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocked, own_blocked);
-            if(own_blocked) return;
-
-            // Retaliatory blocking.
-            bool them_blocked = SocialState.IsBeingBlocked(state);
-            receiver.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocking, them_blocked);
-            if(them_blocked) return;
-        }
+        private volatile IAvatarBrain replyTo = null;
 
         public void SendTextMessage(IAvatarBrain receiver, string text)
         {
@@ -520,36 +432,11 @@ namespace Arteranos.Avatar
             });
         }
 
-        public void SendSocialState(IAvatarBrain receiver, ulong state)
-        {
-            if (!isLocalPlayer)
-                throw new InvalidOperationException("Not owner");
-
-            // Maybe the intended receiver logged off while you tried to send a goodbye message.
-            if (receiver?.UserID == null) return;
-
-            G.Client.SaveSocialStates(receiver.UserID, state, receiver.UserIcon);
-
-            SendCTCPacket(receiver, new CTCPUserState()
-            {
-                state = state
-            });
-        }
-
-
-        #endregion
-        // ---------------------------------------------------------------
-        #region Text message reception
-
-        private volatile IDialogUI m_txtMessageBox = null;
-
-        private volatile IAvatarBrain replyTo = null;
-
         private void ReactReceiveTextMessage(CTCPTextMessage received)
         {
             UserID sender = received.sender;
 
-            PostOffice.EnqueueIncoming(sender, sender, received.text);
+            PostOffice.EnqueueIncoming(sender, received.text);
             PostOffice.Save();
         }
 

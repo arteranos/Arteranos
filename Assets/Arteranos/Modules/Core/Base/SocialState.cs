@@ -7,7 +7,6 @@
 
 using Arteranos.Avatar;
 using Arteranos.Core;
-using Arteranos.XR;
 
 namespace Arteranos.Social
 {
@@ -18,20 +17,20 @@ namespace Arteranos.Social
         public const ulong None = 0;
 
         // You offered your friendship to the targeted user.
-        private const ulong Own_Friend_requested   = (ulong) 1 << 0;
+        private const ulong Own_Friend_requested = (ulong)1 << 0;
 
         // You blocked the targeted user.
-        private const ulong Own_Blocked            = (ulong) 1 << 4;
+        private const ulong Own_Blocked = (ulong)1 << 4;
 
-        private const int THEM_SHIFT               = 16;
+        private const int THEM_SHIFT = 16;
 
-        private const ulong OWN_MASK               = ((ulong) 1 << THEM_SHIFT) - 1;
+        private const ulong OWN_MASK = ((ulong)1 << THEM_SHIFT) - 1;
 
         // The targeted user offered his frienship to you.
-        private const ulong Them_Friend_requested  = Own_Friend_requested << THEM_SHIFT;
+        private const ulong Them_Friend_requested = Own_Friend_requested << THEM_SHIFT;
 
         // The targeted user blocked you.
-        private const ulong Them_Blocked           = Own_Blocked << THEM_SHIFT;
+        private const ulong Them_Blocked = Own_Blocked << THEM_SHIFT;
 
 
         public static void Set(ref ulong field, ulong bits, bool desired) => Bit64field.Set(ref field, bits, desired);
@@ -40,8 +39,7 @@ namespace Arteranos.Social
 
         private static bool IsAny(ulong you, ulong stateBit) => Bit64field.IsAny(you, stateBit);
 
-        private static bool IsAll(IAvatarBrain target, ulong stateBit) 
-            => IsAll(G.Me?.GetSocialStateTo(target) ?? None, stateBit);
+        private static bool IsAll(IAvatarBrain target, ulong stateBit) => false; // TODO Stub
 
         //private static bool IsAny(IAvatarBrain target, ulong stateBit)
         //    => IsAny(G.Me?.GetOwnState(target) ?? None, stateBit);

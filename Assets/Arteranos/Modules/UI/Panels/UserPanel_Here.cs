@@ -15,6 +15,7 @@ using Arteranos.Social;
 using Arteranos.XR;
 using Arteranos.Services;
 using Arteranos.Common;
+using System.Linq;
 
 namespace Arteranos.UI
 {
@@ -37,7 +38,7 @@ namespace Arteranos.UI
             }
 
             // Fill in the subset of the data in the social database.
-            foreach(KeyValuePair<UserID, UserSocialEntryJSON> entry in cs.GetSocialList())
+            foreach(KeyValuePair<UserID, UserSocialEntryJSON> entry in Enumerable.Empty<KeyValuePair<UserID, UserSocialEntryJSON>>()) // TODO Stub
             {
                 if(!list.ContainsKey(entry.Key)) continue;
 

@@ -11,12 +11,10 @@ using UnityEngine;
 using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Collections.Generic;
-using Arteranos.Social;
 using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
 using Ipfs;
 using Arteranos.Common;
-using UnityEngine.InputSystem.EnhancedTouch;
 
 namespace Arteranos.Core
 {
@@ -193,6 +191,7 @@ namespace Arteranos.Core
         public ComfortBlindersType ComfortBlinders { get; set; } = ComfortBlindersType.Off;
     }
 
+    [Obsolete("Unnecessary. Combined state will be bool?: false - Blocked; true - Friend; null - neither")]
     public class UserSocialEntryJSON
     {
         // The user's friend (or blocked) state
@@ -461,75 +460,6 @@ namespace Arteranos.Core
             => G.Client.CMH.Sign(data, out signature);
 
         #endregion
-        // ---------------------------------------------------------------
-        #region Social States
-
-        public void SaveSocialStates(UserID userID, ulong state, Cid icon /* = null */)
-        {
-            bool dirty = false;
-
-            if(Me.SocialList.TryGetValue(userID, out UserSocialEntryJSON oldstate_))
-            {
-                ulong oldstate = oldstate_.State;
-                if (oldstate != state || oldstate != SocialState.None) dirty = true;
-            }
-            else if(state != SocialState.None) dirty = true;
-
-            if (dirty)
-            {
-                if (state != SocialState.None)
-                    Me.SocialList[userID] = new()
-                    {
-                        State = state,
-                        Icon = icon
-                    };
-                else
-                    Me.SocialList.Remove(userID);
-                Save();
-            }
-        }
-
-        public void SaveSocialStates(UserID userID, ulong state)
-        {
-            Cid icon = null;
-            if(Me.SocialList.TryGetValue(userID, out UserSocialEntryJSON oldstate_))
-                icon = oldstate_.Icon;
-
-            SaveSocialStates(userID, state, icon);
-        }
-
-        /// <summary>
-        /// Get the social relations list
-        /// </summary>
-        /// <param name="userID">the targeted user, null if everyone</param>
-        /// <param name="p">Additional search limitations</param>
-        /// <returns>The matching entries with the equivalent UserIDs</returns>
-        public IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> GetSocialList(
-            UserID userID = null, Func<KeyValuePair<UserID, UserSocialEntryJSON>, bool> p = null)
-        {
-            p ??= (x) => true;
-
-            foreach (var socialListEntry in Me.SocialList)
-                if((userID == null || socialListEntry.Key == userID) && 
-                    p.Invoke(socialListEntry)) yield return socialListEntry;
-        }
-
-        public void UpdateSocialListEntry(UserID userID, Func<ulong, ulong> modification)
-        {
-            UserSocialEntryJSON state_ = Me.SocialList.ContainsKey(userID)
-                ? Me.SocialList[userID]
-                : new()
-                {
-                    State = SocialState.None,
-                    Icon = null,
-                };
-
-            state_.State = modification(state_.State);
-
-            SaveSocialStates(userID, state_.State, state_.Icon);
-        }
-
-#endregion
         // ---------------------------------------------------------------
         #region Save & Load
 

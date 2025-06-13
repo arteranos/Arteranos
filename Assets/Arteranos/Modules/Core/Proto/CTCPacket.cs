@@ -20,7 +20,7 @@ namespace Arteranos.Core
     }
 
     [ProtoContract]
-    [ProtoInclude(65537, typeof(CTCPUserState))]
+    // [ProtoInclude(65537, typeof(CTCPUserState))]
     [ProtoInclude(65538, typeof(CTCPTextMessage))]
     public class CTCPacket
     {
@@ -36,13 +36,6 @@ namespace Arteranos.Core
 
         public static CTCPacket Deserialize(byte[] data) 
             => Serializer.Deserialize<CTCPacket>(new MemoryStream(data));
-    }
-
-    [ProtoContract]
-    public class CTCPUserState : CTCPacket
-    {
-        [ProtoMember(1)]
-        public ulong state;
     }
 
     [ProtoContract]

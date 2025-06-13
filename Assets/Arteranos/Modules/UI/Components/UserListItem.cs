@@ -123,13 +123,9 @@ namespace Arteranos.UI
             {
                 IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
 
-                IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = G.Client.GetSocialList(TargetUserID);
-                
-                ulong currentState = q.Any() ? q.First().Value.State : SocialState.None;
+                bool friends = G.UserData.IsFriendOffered(TargetUserID);
 
-                bool friends = SocialState.IsFriendRequested(currentState);
-
-                bool blocked = SocialState.IsBlocked(currentState);
+                bool blocked = G.UserData.IsBlocked(TargetUserID);
 
                 btn_AddFriend.gameObject.SetActive(!friends && !blocked);
                 btn_DelFriend.gameObject.SetActive(friends && !blocked);
@@ -150,69 +146,34 @@ namespace Arteranos.UI
 
         private void GotAddFriendButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
-            if(targetUser != null)
-            {
-                Me.OfferFriendship(targetUser, true);
-                return;
-            }
+            bool changed = G.UserData.OfferFriend(TargetUserID, true);
+            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
 
-            cs.UpdateSocialListEntry(TargetUserID, (x) =>
-            {
-                ulong state = x;
-                SocialState.SetFriendState(ref state, true);
-                return state;
-            });
+            G.UserData.Save();
         }
 
         private void GotDelFriendButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
-            if(targetUser != null)
-            {
-                Me.OfferFriendship(targetUser, false);
-                return;
-            }
+            bool changed = G.UserData.OfferFriend(TargetUserID, false);
+            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
 
-            cs.UpdateSocialListEntry(TargetUserID, (x) =>
-            {
-                ulong state = x;
-                SocialState.SetFriendState(ref state, false);
-                return state;
-            });
+            G.UserData.Save();
         }
 
         private void GotBlockButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
-            if(targetUser != null)
-            {
-                Me.BlockUser(targetUser, true);
-                return;
-            }
+            bool changed = G.UserData.ImposeBlock(TargetUserID, true);
+            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
 
-            cs.UpdateSocialListEntry(TargetUserID, (x) =>
-            {
-                ulong state = x;
-                SocialState.SetBlockState(ref state, true);
-                return state;
-            });
+            G.UserData.Save();
         }
 
         private void GotUnblockButtonClick()
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(TargetUserID);
-            if(targetUser != null)
-            {
-                Me.BlockUser(targetUser, false);
-                return;
-            }
-            cs.UpdateSocialListEntry(TargetUserID, (x) =>
-            {
-                ulong state = x;
-                SocialState.SetBlockState(ref state, false);
-                return state;
-            });
+            bool changed = G.UserData.ImposeBlock(TargetUserID, false);
+            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
+
+            G.UserData.Save();
         }
 
         private void GotSendTextButtonClick()

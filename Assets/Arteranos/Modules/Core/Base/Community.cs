@@ -76,9 +76,7 @@ namespace Arteranos.Core
                 return Enumerable.Empty<UserID>();
 
             // All of the friends
-            IEnumerable<(UserID friend, string fp)> friends =
-                from entry in G.Client.GetSocialList(null, arg => Social.SocialState.IsFriends(arg.Value.State))
-                select (entry.Key, HexString.Encode(entry.Key.Fingerprint));
+            IEnumerable<(UserID friend, string fp)> friends = Enumerable.Empty<(UserID friend, string fp)>(); // TODO Stub
 
             // Intersect server's user list with the own friend list
             return from entry in friends

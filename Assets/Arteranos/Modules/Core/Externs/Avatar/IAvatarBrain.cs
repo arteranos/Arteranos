@@ -31,19 +31,14 @@ namespace Arteranos.Avatar
 
         event Action<int> OnAppearanceStatusChanged;
 
-        void BlockUser(IAvatarBrain receiver, bool blocking = true);
-        ulong GetSocialStateTo(IAvatarBrain receiver);
         bool IsAbleTo(UserCapabilities cap, IAvatarBrain target);
         void LogDebug(object message);
         void LogError(object message);
         void LogWarning(object message);
         void NotifyBubbleBreached(IAvatarBrain touchy, bool isFriend, bool entered);
-        void OfferFriendship(IAvatarBrain receiver, bool offering = true);
         void PerformEmote(string emoteName);
         void SendTextMessage(IAvatarBrain receiver, string text);
         void SetAppearanceStatusBit(int ASBit, bool set);
-        void UpdateSSEffects(IAvatarBrain receiver, ulong state);
-        void SendSocialState(IAvatarBrain receiver, ulong state);
         void GotObjectClicked(GameObject clicked);
         void GotObjectGrabbed(GameObject grabbed);
         void GotObjectReleased(GameObject released, Vector3 detachVelocity, Vector3 detachAngularVelocity);

@@ -68,20 +68,12 @@ namespace Arteranos.Core
             dirty = false;
         }
 
-        public static void EnqueueIncoming(UserID sender, string senderNickname, string text)
+        public static void EnqueueIncoming(UserID sender, string text)
         {
-            Client cs = G.Client;
-
-            // Look for your friend list if the sender is a friend - use the global UserID
-            IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> q = cs.GetSocialList(sender);
-
-            // Either it's the scoped UserID, exactly matching, or the global UserID. 
-            if(q.Count() > 0) sender = q.First().Key;
-
             stash.incoming.Add(new()
             {
                 Date = DateTime.Now,
-                Nickname = senderNickname,
+                Nickname = sender.Nickname,
                 Text = text,
                 UserID = sender
             });

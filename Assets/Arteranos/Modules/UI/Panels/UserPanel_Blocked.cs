@@ -14,6 +14,7 @@ using Arteranos.Avatar;
 using Arteranos.Social;
 using Arteranos.XR;
 using Arteranos.Common;
+using System.Linq;
 
 namespace Arteranos.UI
 {
@@ -21,7 +22,7 @@ namespace Arteranos.UI
     {
         public override IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> GetSocialListTab()
         {
-            IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> list = cs.GetSocialList(null, IsFriends);
+            IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> list = Enumerable.Empty<KeyValuePair<UserID, UserSocialEntryJSON>>(); // TODO Stub
             foreach(KeyValuePair<UserID, UserSocialEntryJSON> entry in list) yield return entry;
         }
 

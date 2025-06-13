@@ -21,7 +21,7 @@ namespace Arteranos.Editor
             if (SessionState.GetBool("ARTERANOS_WELCOME", false)) return;
             SessionState.SetBool("ARTERANOS_WELCOME", true);
 
-            BuildPlayers.SetVersion();
+            BuildPlayers.GetProjectGitVersion();
         }
     }
 }

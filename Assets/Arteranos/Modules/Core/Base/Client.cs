@@ -412,9 +412,6 @@ namespace Arteranos.Core
             }
         }
 
-        [JsonIgnore]
-        public ServerPermissions Permissions { get; private set; } = null;
-
         public override float SizeBubbleFriends
         {
             get => base.SizeBubbleFriends;
@@ -445,7 +442,7 @@ namespace Arteranos.Core
             }
         }
 
-        public void PingXRControllersChanged() => OnXRControllerChanged?.Invoke(Controls, Movement, Permissions);
+        public void PingXRControllersChanged() => OnXRControllerChanged?.Invoke(Controls, Movement, G.UserContPerms);
 
         public void PingUserHUDChanged() => OnUserHUDSettingsChanged?.Invoke(UserHUD);
 
@@ -540,7 +537,7 @@ namespace Arteranos.Core
         {
             G.UserData.Save();
 
-            Permissions.Save();
+            G.UserContPerms.Save();
 
             base.Save();
         }
@@ -562,21 +559,21 @@ namespace Arteranos.Core
 
         private static void LoadPermissions(Client cs)
         {
-            cs.Permissions = ServerPermissions.Load();
+            G.UserContPerms = ServerPermissions.Load();
 
-            if (cs.Permissions == null)
+            if (G.UserContPerms == null)
             {
-                cs.Permissions = cs.ContentFilterPreferences;
+                G.UserContPerms = cs.ContentFilterPreferences;
 
                 // Fiddle with one bit to set the dirty flag
-                cs.Permissions.Flying = !cs.Permissions.Flying;
-                cs.Permissions.Flying = !cs.Permissions.Flying;
+                G.UserContPerms.Flying = !G.UserContPerms.Flying;
+                G.UserContPerms.Flying = !G.UserContPerms.Flying;
             }
 
-            if (cs.Permissions == null)
-                cs.Permissions = new();
+            if (G.UserContPerms == null)
+                G.UserContPerms = new();
 
-            cs.Permissions.Save();
+            G.UserContPerms.Save();
 
             // Clear the legacy fields... but don't save, yet.
             cs.ContentFilterPreferences = null;

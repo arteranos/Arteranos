@@ -62,7 +62,7 @@ namespace Arteranos.UI
 
         private void OnFlyingChanged(bool arg0)
         {
-            cs.Permissions.Flying = arg0;
+            G.UserContPerms.Flying = arg0;
             cs.PingXRControllersChanged();
             dirty = true;
         }
@@ -112,7 +112,7 @@ namespace Arteranos.UI
 
             MovementSettingsJSON movement = cs.Movement;
 
-            chk_Flying.isOn = cs.Permissions.Flying ?? false;
+            chk_Flying.isOn = G.UserContPerms.Flying ?? false;
             spn_Turning.FillSpinnerEnum(out spne_turn, movement.Turn);
             spn_Teleporting.FillSpinnerEnum(out spne_teleport, movement.Teleport);
             spn_Blinders.FillSpinnerEnum(out spne_comfortblinders, movement.ComfortBlinders);

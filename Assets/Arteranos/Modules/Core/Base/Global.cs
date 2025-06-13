@@ -65,6 +65,7 @@ namespace Arteranos
         public static ServerUserBase ServerUsers { get; set; }
         public static Community Community { get; set; } = new();
         public static UserDataJSON UserData { get; set; }
+        public static ServerPermissions UserContPerms { get; set; }
         // ---------------------------------------------------------------
         public static DefaultAvatar_ DefaultAvatar { get; } = new();
         // ---------------------------------------------------------------

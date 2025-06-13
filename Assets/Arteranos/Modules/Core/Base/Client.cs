@@ -204,12 +204,15 @@ namespace Arteranos.Core
     public class UserDataSettingsJSON
     {
         // LEGACY - User's signature key pair
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public byte[] UserSignKeyPair { get; set; } = null;
 
         // LEGACY - The display name of the user. Generate if null
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Nickname { get; set; } = null;
 
         // LEGACY - The user's 2D Icon.
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Cid UserIconCid { get; set; } = null;
 
         // Current avatar
@@ -285,6 +288,7 @@ namespace Arteranos.Core
         public virtual ClientAudioSettingsJSON AudioSettings { get; set; } = new();
 
         // The content filter preferences for sorting the servers
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public virtual ServerPermissions ContentFilterPreferences { get; set; } = new(true);
 
         // The controls settings
@@ -573,6 +577,9 @@ namespace Arteranos.Core
                 cs.Permissions = new();
 
             cs.Permissions.Save();
+
+            // Clear the legacy fields... but don't save, yet.
+            cs.ContentFilterPreferences = null;
         }
 
         private static void LoadUserID(Client cs)
@@ -601,6 +608,11 @@ namespace Arteranos.Core
 
             // Save if it's newly generated or imported from legacy data
             cs.UserIDJSON.Save();
+
+            // Clear the legacy fields... but don't save, yet.
+            cs.Me.UserSignKeyPair = null;
+            cs.Me.Nickname = null;
+            cs.Me.UserIconCid = null;
         }
 
         public static void UpdateServerPass(ServerInfo serverInfo, bool TOS, byte[] serverKey)

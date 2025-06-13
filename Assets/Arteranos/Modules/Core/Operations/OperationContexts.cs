@@ -26,7 +26,7 @@ namespace Arteranos.Core.Operations
     {
         public List<ServerInfo> serverInfos = null;
         public Cid desiredWorldCid = null;
-        public ServerPermissions desiredWorldPermissions = null;
+        public PermissionsJSON desiredWorldPermissions = null;
         public MultiHash resultPeerID = null;
     }
 

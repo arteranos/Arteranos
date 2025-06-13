@@ -47,7 +47,7 @@ namespace Arteranos.UI
         public Button btn_ClearCaches = null;
 
         private Cid ServerIcon = null;
-        private ServerPermissions Permissions = null;
+        private PermissionsJSON Permissions = null;
 
         private bool dirty = false;
 

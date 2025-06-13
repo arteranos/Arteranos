@@ -84,7 +84,7 @@ namespace Arteranos.UI
                 }
 
                 WorldInfo worldInfo = World.WorldInfo;
-                ServerPermissions permission = worldInfo.ContentRating;
+                PermissionsJSON permission = worldInfo.ContentRating;
                 AllowedForThis = permission != null && !permission.IsInViolation(SettingsManager.ActiveServerData.Permissions);
 
                 VisualizeWorldData();

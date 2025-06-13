@@ -38,7 +38,7 @@ namespace Arteranos.Core
         public string MinVersion;
 
         [ProtoMember(9)]
-        public ServerPermissions Permissions;
+        public PermissionsJSON Permissions;
 
         [ProtoMember(10)]
         public string PrivacyTOSNotice;
@@ -87,7 +87,7 @@ namespace Arteranos.Core
                    ServerIcon == other.ServerIcon &&
                    Version == other.Version &&
                    MinVersion == other.MinVersion &&
-                   EqualityComparer<ServerPermissions>.Default.Equals(Permissions, other.Permissions) &&
+                   EqualityComparer<PermissionsJSON>.Default.Equals(Permissions, other.Permissions) &&
                    PrivacyTOSNotice == other.PrivacyTOSNotice &&
                    PeerID == other.PeerID &&
                    LastModified == other.LastModified &&

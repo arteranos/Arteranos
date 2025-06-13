@@ -30,7 +30,7 @@ namespace Arteranos.Core
         //public byte[] AuthorPublicKey;
 
         [ProtoMember(6)]
-        public ServerPermissions ContentRating;
+        public PermissionsJSON ContentRating;
 
         //[ProtoMember(7)]
         //public byte[] Signature;

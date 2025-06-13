@@ -79,7 +79,7 @@ namespace Arteranos.WorldEdit
         public string WorldDescription { get; set; }
 
         // Content warnings
-        public ServerPermissions ContentWarning { get; set; }
+        public PermissionsJSON ContentWarning { get; set; }
 
         // World Access Info while editing
         public WorldAccessInfo WorldAccessInfo { get; set; }
@@ -125,7 +125,7 @@ namespace Arteranos.WorldEdit
             }
             else
             {
-                ContentWarning = info.ContentRating.Clone() as ServerPermissions;
+                ContentWarning = info.ContentRating.Clone() as PermissionsJSON;
                 WorldName = info.WorldName;
                 WorldDescription = info.WorldDescription;
                 WorldAccessInfo = info.AccessInfo;

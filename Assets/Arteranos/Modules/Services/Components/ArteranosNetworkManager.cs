@@ -637,7 +637,7 @@ namespace Arteranos.Services
                 // is like rated to G or PG-13? Even if it's the server admin?
                 if(worldInfo != null)
                 {
-                    ServerPermissions permission = worldInfo.ContentRating;
+                    PermissionsJSON permission = worldInfo.ContentRating;
                     bool AllowedForThis = permission != null && !permission.IsInViolation(G.Server.Permissions);
 
                     if(!AllowedForThis)

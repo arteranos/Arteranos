@@ -290,7 +290,7 @@ namespace Arteranos.Core
 
         // The content filter preferences for sorting the servers
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public virtual ServerPermissions ContentFilterPreferences { get; set; } = new(true);
+        public virtual PermissionsJSON ContentFilterPreferences { get; set; } = new(true);
 
         // The controls settings
         public virtual ControlSettingsJSON Controls { get; set; } = new();
@@ -367,7 +367,7 @@ namespace Arteranos.Core
         public event Action<string, float> OnAvatarChanged;
         public event Action<bool> OnVRModeChanged;
         public event Action<float, float> OnPrivacyBubbleChanged;
-        public event Action<ControlSettingsJSON, MovementSettingsJSON, ServerPermissions> OnXRControllerChanged;
+        public event Action<ControlSettingsJSON, MovementSettingsJSON, PermissionsJSON> OnXRControllerChanged;
         public event Action<UserHUDSettingsJSON> OnUserHUDSettingsChanged;
         public event Action<UserPrivacy> OnUserPrivacyChanged;
 
@@ -559,7 +559,7 @@ namespace Arteranos.Core
 
         private static void LoadPermissions(Client cs)
         {
-            G.UserContPerms = ServerPermissions.Load();
+            G.UserContPerms = PermissionsJSON.Load();
 
             if (G.UserContPerms == null)
             {

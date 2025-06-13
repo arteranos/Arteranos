@@ -33,7 +33,7 @@ namespace Arteranos.WorldEdit
         GameObject FocusedWorldObject { get; set; }
         string WorldName { get; set; }
         string WorldDescription { get; set; }
-        ServerPermissions ContentWarning { get; set; }
+        PermissionsJSON ContentWarning { get; set; }
         byte[] PasteBuffer { get; set; }
         WorldAccessInfo WorldAccessInfo { get; set; }
 

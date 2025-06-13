@@ -65,7 +65,7 @@ namespace Arteranos.Core
 
         // The server's permissions
         [ProtoMember(7)]
-        public ServerPermissions Permissions = new(true);
+        public PermissionsJSON Permissions = new(true);
 
         [JsonIgnore]
         [ProtoMember(8)]

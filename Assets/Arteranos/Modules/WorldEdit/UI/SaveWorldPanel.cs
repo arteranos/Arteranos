@@ -202,7 +202,7 @@ namespace Arteranos.WorldEdit
                 }
             }
 
-            ServerPermissions p = G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Offline
+            PermissionsJSON p = G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Offline
                 ? new()
                 {
                     Violence = null,
@@ -213,7 +213,7 @@ namespace Arteranos.WorldEdit
                 }
                 : SettingsManager.ActiveServerData.Permissions;
 
-            ServerPermissions cw = G.WorldEditorData.ContentWarning;
+            PermissionsJSON cw = G.WorldEditorData.ContentWarning;
 
             // Restrict the permission settings depending on the active server.
             // Like, disallowing to build XXX content on a PG-13 server.

@@ -60,7 +60,7 @@ namespace Arteranos.XR
         private void OnDestroy() => G.Client.OnXRControllerChanged -= DownloadControlSettings;
 
 
-        private void DownloadControlSettings(ControlSettingsJSON ccs, MovementSettingsJSON mcs, ServerPermissions sp)
+        private void DownloadControlSettings(ControlSettingsJSON ccs, MovementSettingsJSON mcs, PermissionsJSON sp)
         {
             if (ccs == null) return;
 

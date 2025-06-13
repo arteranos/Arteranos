@@ -38,7 +38,7 @@ namespace Arteranos.UI
         public Transform tbl_Table;
         public TextMeshProUGUI lbl_HelpText;
 
-        private ServerPermissions spj = null;
+        private PermissionsJSON spj = null;
 
         // private readonly List<Button> btns_Help = new();
         // private readonly List<Spinner> spns_Config = new();
@@ -154,7 +154,7 @@ namespace Arteranos.UI
         {
             base.Called(data);
 
-            spj = data as ServerPermissions;
+            spj = data as PermissionsJSON;
 
             Debug.Assert(spj != null, "No association of the Content Filter UI");
 

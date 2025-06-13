@@ -84,7 +84,7 @@ namespace Arteranos.Core
         }
 
         public string SPKDBKey => DescriptionStruct.PeerID;
-        public ServerPermissions Permissions => DescriptionStruct?.Permissions ?? new(true);
+        public PermissionsJSON Permissions => DescriptionStruct?.Permissions ?? new(true);
         public DateTime LastUpdated => DescriptionStruct?.LastModified ?? DateTime.MinValue;
         public DateTime LastOnline
         {

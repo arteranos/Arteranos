@@ -224,9 +224,6 @@ namespace Arteranos.Core
 
         // Avatar storage
         public List<AvatarDescriptionJSON> AvatarGallery { get; set; } = new();
-
-        // The user's social state to others
-        public Dictionary<UserID, UserSocialEntryJSON> SocialList { get; set; } = new();
     }
 
     public class UserHUDSettingsJSON
@@ -511,7 +508,7 @@ namespace Arteranos.Core
 
         private static void LoadUserID(Client cs)
         {
-            G.UserData = UserDataJSON.Load();
+            G.UserData = new(UserDataJSON.Load());
 
             // If there isn't a UserID.json file or it's invalid...
             if (!G.UserData)
@@ -529,7 +526,7 @@ namespace Arteranos.Core
             // Still a no go. Generate, and save
             if (!G.UserData)
             {
-                G.UserData = UserDataJSON.Generate();
+                G.UserData = (UserData) UserDataJSON.Generate();
                 G.UserData.Nickname = SessionConstants.Instance.DefaultUserName;
             }
 

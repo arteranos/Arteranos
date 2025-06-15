@@ -19,7 +19,7 @@ namespace Arteranos.Avatar
     {
         uint NetID { get; }
         string Nickname { get; }
-        string UserIcon {  get; }
+        string UserIcon { get; }
         int AppearanceStatus { get; set; }
         IAvatarBody Body { get; }
         UserID UserID { get; set; }
@@ -48,5 +48,6 @@ namespace Arteranos.Avatar
         void GotObjectReleased(List<Guid> released, Vector3 detachVelocity, Vector3 detachAngularVelocity);
         void GotObjectHeld(List<Guid> holding, Vector3 position, Quaternion rotation);
         void ManageAuthorityOf(GameObject GO, bool auth);
+        void RelayFriendState(UserID target);
     }
 }

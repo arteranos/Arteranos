@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using Arteranos.Services;
 using Arteranos.Common;
 using Ipfs;
+using System.Linq;
 
 namespace Arteranos.Avatar
 {
@@ -149,6 +150,19 @@ namespace Arteranos.Avatar
 
         public override void OnStartClient()
         {
+            IEnumerator GreetOtherUsers(List<UserID> users)
+            {
+                for (int i = 0; i < users.Count; i++)
+                {
+                    UserID entry = users[i];
+                    if (entry == G.Me.UserID) continue;
+
+                    RelayFriendState(entry);
+
+                    yield return new WaitForEndOfFrame();
+                }
+            }
+
             Client cs = G.Client;
 
             base.OnStartClient();
@@ -168,11 +182,19 @@ namespace Arteranos.Avatar
                 PostOffice.Load();
 
                 StartCoroutine(DoTextMessageLoopCoroutine());
+
+                // We've just arrived at a party, now do the shaking hands....
+                IEnumerable<UserID> q = from entry in G.NetworkStatus.GetOnlineUsers()
+                                        select entry.UserID;
+                StartCoroutine(GreetOtherUsers(q.ToList()));
             }
             else
             {
                 // Alien avatars get the hit capsules to target them to call up the nameplates.
                 HitBox = Factories.NewHitBox(this);
+
+                // We've not the last guest to arrive. Or they're just stragglers.
+                if (G.Me != null) G.Me.RelayFriendState(UserID);
             }
         }
 
@@ -221,7 +243,7 @@ namespace Arteranos.Avatar
 
             UserPrivacy = cs.UserPrivacy;
 
-            UserIcon = (Cid) G.UserData;
+            UserIcon = (Cid)G.UserData;
         }
 
         #endregion
@@ -277,16 +299,16 @@ namespace Arteranos.Avatar
             syncDirection = SyncDirection.ServerToClient;
         }
 
-        public void OnNetAppearanceStatusChanged(int _1, int _2) 
+        public void OnNetAppearanceStatusChanged(int _1, int _2)
             => UpdateNetAppearanceStatus();
 
-        private void OnAvatarCidStringChanged(string _1, string _2) 
+        private void OnAvatarCidStringChanged(string _1, string _2)
             => Body?.ReloadAvatar(m_AvatarCidString, m_AvatarHeight);
 
-        private void OnAvatarHeightChanged(float _1, float _2) 
+        private void OnAvatarHeightChanged(float _1, float _2)
             => Body?.ReloadAvatar(m_AvatarCidString, m_AvatarHeight);
 
-        private void OnUserIDChanged(UserID _1, UserID userID) 
+        private void OnUserIDChanged(UserID _1, UserID userID)
             => name = $"Avatar [{userID.Nickname}][netId={netId}]";
 
         // Maybe I have to include a second component for the client-guided variables?
@@ -300,7 +322,7 @@ namespace Arteranos.Avatar
         private void CmdPropagateAvatarURL(string URL)
         {
             m_AvatarCidString = URL;
-            if(!isClient) Body?.ReloadAvatar(m_AvatarCidString, m_AvatarHeight);
+            if (!isClient) Body?.ReloadAvatar(m_AvatarCidString, m_AvatarHeight);
         }
 
         [Command]
@@ -320,7 +342,7 @@ namespace Arteranos.Avatar
         private void RpcPerformEmote(string emojiName)
         {
             // Invisible users wouldn't show the emotes
-            if(Avatar.AppearanceStatus.IsInvisible(AppearanceStatus)) return;
+            if (Avatar.AppearanceStatus.IsInvisible(AppearanceStatus)) return;
 
             LoopPerformEmoji(emojiName);
         }
@@ -333,8 +355,8 @@ namespace Arteranos.Avatar
         {
             // Special case - self-modifying appearance status, like making yourself invisible,
             // and, to a lesser extent, self-muting.
-            if(HitBox != null) HitBox.Interactable = !Avatar.AppearanceStatus.IsInvisible(AppearanceStatus);
-            if(Body != null) Body.Invisible = Avatar.AppearanceStatus.IsInvisible(AppearanceStatus);
+            if (HitBox != null) HitBox.Interactable = !Avatar.AppearanceStatus.IsInvisible(AppearanceStatus);
+            if (Body != null) Body.Invisible = Avatar.AppearanceStatus.IsInvisible(AppearanceStatus);
 
             OnAppearanceStatusChanged?.Invoke(AppearanceStatus);
         }
@@ -424,7 +446,7 @@ namespace Arteranos.Avatar
         public void SendTextMessage(IAvatarBrain receiver, string text)
         {
             // Maybe the intended receiver logged off while you tried to send a goodbye message.
-            if(receiver == null) return;
+            if (receiver == null) return;
 
             SendCTCPacket(receiver, new CTCPTextMessage()
             {
@@ -454,18 +476,18 @@ namespace Arteranos.Avatar
 
         private void DoTextMessage()
         {
-            if(replyTo != null)
+            if (replyTo != null)
             {
                 Factory.NewTextMessage(replyTo);
-                replyTo= null;
+                replyTo = null;
                 return;
             }
 
-            if(IsTextMessageOccupied()) return;
+            if (IsTextMessageOccupied()) return;
 
             PostOffice.DequeueIncoming(null, out MessageEntryJSON message);
 
-            if(message == null) return;
+            if (message == null) return;
 
             PostOffice.Save();
 
@@ -507,7 +529,7 @@ namespace Arteranos.Avatar
 
             ParticleSystem ps = EmojiSettings.Load().GetEmotePS(emojiName);
 
-            if(ps == null) return;
+            if (ps == null) return;
 
             ps.transform.SetParent(transform, false);
 
@@ -532,7 +554,7 @@ namespace Arteranos.Avatar
 
             bool targetIsAnyAdmin = (target != null && (Core.UserState.IsSAdmin(target.UserState) || Core.UserState.IsWAdmin(target.UserState)));
 
-            bool userHigher = target == null || 
+            bool userHigher = target == null ||
                 (UserState & Core.UserState.GOOD_MASK) > (target.UserState & Core.UserState.GOOD_MASK);
 
             return cap switch
@@ -587,21 +609,21 @@ namespace Arteranos.Avatar
         #endregion
         // ---------------------------------------------------------------
         #region Interacting World Objects
-        public void GotObjectClicked(GameObject clicked) 
+        public void GotObjectClicked(GameObject clicked)
             => CmdGotObjectClicked(GetEnclosingObject(clicked));
-        public void GotObjectClicked(List<Guid> clicked) 
+        public void GotObjectClicked(List<Guid> clicked)
             => CmdGotObjectClicked(clicked);
-        public void GotObjectGrabbed(GameObject grabbed) 
+        public void GotObjectGrabbed(GameObject grabbed)
             => CmdGotObjectGrabbed(GetEnclosingObject(grabbed));
-        public void GotObjectGrabbed(List<Guid> grabbed) 
+        public void GotObjectGrabbed(List<Guid> grabbed)
             => CmdGotObjectGrabbed(grabbed);
         public void GotObjectReleased(GameObject released, Vector3 detachVelocity, Vector3 detachAngularVelocity)
             => CmdGotObjectReleased(GetEnclosingObject(released), detachVelocity, detachAngularVelocity);
         public void GotObjectReleased(List<Guid> released, Vector3 detachVelocity, Vector3 detachAngularVelocity)
             => CmdGotObjectReleased(released, detachVelocity, detachAngularVelocity);
-        public void GotObjectHeld(GameObject holding, Vector3 position, Quaternion rotation) 
+        public void GotObjectHeld(GameObject holding, Vector3 position, Quaternion rotation)
             => CmdGotObjectHeld(GetEnclosingObject(holding), position, rotation);
-        public void GotObjectHeld(List<Guid> holding, Vector3 position, Quaternion rotation) 
+        public void GotObjectHeld(List<Guid> holding, Vector3 position, Quaternion rotation)
             => CmdGotObjectHeld(holding, position, rotation);
         public void ManageAuthorityOf(GameObject GO, bool auth)
             => CmdManageAuthorityOf(GetEnclosingObject(GO), auth);
@@ -611,15 +633,15 @@ namespace Arteranos.Avatar
             => G.WorldEditorData.GotWorldObjectClicked(GetEnclosedObject(clicked));
 
         [Command]
-        private void CmdGotObjectClicked(List<Guid> clicked) 
+        private void CmdGotObjectClicked(List<Guid> clicked)
             => G.WorldEditorData.GotWorldObjectClicked(clicked);
 
         [Command]
-        private void CmdGotObjectGrabbed(GameObject grabbed) 
+        private void CmdGotObjectGrabbed(GameObject grabbed)
             => G.WorldEditorData.GotWorldObjectGrabbed(GetEnclosedObject(grabbed));
 
         [Command]
-        private void CmdGotObjectGrabbed(List<Guid> grabbed) 
+        private void CmdGotObjectGrabbed(List<Guid> grabbed)
             => G.WorldEditorData.GotWorldObjectGrabbed(grabbed);
 
         [Command]
@@ -631,11 +653,11 @@ namespace Arteranos.Avatar
             => G.WorldEditorData.GotWorldObjectReleased(released, detachVelocity, detachAngularVelocity);
 
         [Command]
-        private void CmdGotObjectHeld(GameObject holding, Vector3 position, Quaternion rotation) 
+        private void CmdGotObjectHeld(GameObject holding, Vector3 position, Quaternion rotation)
             => G.WorldEditorData.GotWorldObjectHeld(GetEnclosedObject(holding), position, rotation);
 
         [Command]
-        private void CmdGotObjectHeld(List<Guid> holding, Vector3 position, Quaternion rotation) 
+        private void CmdGotObjectHeld(List<Guid> holding, Vector3 position, Quaternion rotation)
             => G.WorldEditorData.GotWorldObjectHeld(holding, position, rotation);
 
         [Command]
@@ -648,11 +670,60 @@ namespace Arteranos.Avatar
             o.ChangeAuthority(gameObject, auth);
         }
 
-        private GameObject GetEnclosedObject(GameObject networkGO) 
+        private GameObject GetEnclosedObject(GameObject networkGO)
             => networkGO && networkGO.TryGetComponent(out IEnclosingObject o) ? o.EnclosedObject : networkGO;
 
-        private GameObject GetEnclosingObject(GameObject coreGO) 
+        private GameObject GetEnclosingObject(GameObject coreGO)
             => coreGO.TryGetComponent(out IEnclosedObject o) ? o.EnclosingObject : coreGO;
+
+        #endregion
+        // ---------------------------------------------------------------
+        #region Friend/Block state handling
+        public void RelayFriendState(UserID target)
+        {
+            if (!isLocalPlayer) throw new InvalidOperationException("Internal error: not owner");
+
+            bool? state = G.UserData.IsStated(target);
+            Debug.Log($"{(string)UserID} sends {(string)target} the state: {state}");
+            CmdRelayFriendState(target, state);
+        }
+
+        [Command]
+        private void CmdRelayFriendState(UserID target, bool? state)
+        {
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(target);
+            NetworkIdentity netid = targetUser.gameObject.GetComponent<NetworkIdentity>();
+
+            TargetReceiveFriendState(netid.connectionToClient, UserID, state);
+        }
+
+        [TargetRpc]
+        private void TargetReceiveFriendState(NetworkConnectionToClient target, UserID source, bool? state)
+        {
+            _ = target; // For TargetRpc's client targeting
+
+            Debug.Log($"{(string)UserID} got from {(string)source} the status: {state}");
+
+            bool changed = false;
+
+            switch (state)
+            {
+                case false:
+                    changed = G.UserData.ReceiveBlock(source, true);
+                    break;
+                case null:
+                    changed = G.UserData.ReceiveBlock(source, false);
+                    changed |= G.UserData.ReceiveFriend(source, false);
+                    break;
+                case true:
+                    changed = G.UserData.ReceiveFriend(source, true);
+                    break;
+            }
+
+            // Announce the reactions from source's change of views.
+            // Common example: "You block me?! Then you're not a friend anymore, Bwaaaah!"
+            if (changed) RelayFriendState(source);
+        }
 
         #endregion
     }

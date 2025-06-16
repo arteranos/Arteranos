@@ -111,7 +111,7 @@ namespace Arteranos.XR
             }
 
             MoveProvider.useGravity = !(sp.Flying ?? false                               // User preferences
-                && Core.Utils.IsAbleTo(Social.UserCapabilities.CanEnableFly, null));        // Server restrictions (no server = true)
+                && Core.Utils.IsAbleTo(Core.UserCapabilities.CanEnableFly, null));        // Server restrictions (no server = true)
 
             TurnType turnType = mcs.Turn;
             StartCoroutine(ReconfigureTurnType(turnType));

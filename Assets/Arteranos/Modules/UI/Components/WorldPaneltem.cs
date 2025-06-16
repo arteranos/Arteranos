@@ -107,7 +107,7 @@ namespace Arteranos.UI
             // change the world. And you still have the great responsibility...
             btn_Visit.gameObject.SetActive(G.NetworkStatus.GetOnlineLevel() != OnlineLevel.Host);
             btn_ChangeWorld.gameObject.SetActive(
-                Core.Utils.IsAbleTo(Social.UserCapabilities.CanInitiateWorldTransition, null)
+                Core.Utils.IsAbleTo(Core.UserCapabilities.CanInitiateWorldTransition, null)
                 && AllowedForThis
                 && !G.World.ChangeInProgress);
 

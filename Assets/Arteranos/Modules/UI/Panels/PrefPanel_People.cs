@@ -8,7 +8,6 @@
 using UnityEngine.EventSystems;
 
 using Arteranos.Core;
-using Arteranos.Social;
 
 namespace Arteranos.UI
 {

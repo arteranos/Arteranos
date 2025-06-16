@@ -7,7 +7,6 @@
 
 using Arteranos.Common;
 using Arteranos.Core;
-using Arteranos.Social;
 using Ipfs.Cryptography.Proto;
 using System;
 using System.Collections.Generic;

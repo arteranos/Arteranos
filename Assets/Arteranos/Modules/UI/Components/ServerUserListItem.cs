@@ -64,7 +64,7 @@ namespace Arteranos.UI
 
             bool IsBanned = UserState.IsBanned(user.userState);
             bool isSrvAdminAsstnt = Bit64field.IsAny(user.userState, UserState.Srv_admin_asstnt);
-            bool canEditUsers = Utils.IsAbleTo(Social.UserCapabilities.CanAdminServerUsers, null);
+            bool canEditUsers = Utils.IsAbleTo(Core.UserCapabilities.CanAdminServerUsers, null);
 
             btn_Unban.gameObject.SetActive(IsBanned && canEditUsers);
 

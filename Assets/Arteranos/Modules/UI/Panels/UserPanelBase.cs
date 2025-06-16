@@ -34,8 +34,8 @@ namespace Arteranos.UI
 
             if(cs == null) return;
 
-            foreach(KeyValuePair<UserID, UserSocialEntryJSON> entry in GetSocialListTab())
-                UserListItem.New(lvc_UserList.transform, entry.Key, LocationVisible);
+            foreach(UserID entry in GetSocialListTab())
+                UserListItem.New(lvc_UserList.transform, entry, LocationVisible);
         }
 
         protected override void OnDisable()
@@ -51,6 +51,6 @@ namespace Arteranos.UI
             base.OnDisable();
         }
 
-        public abstract IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> GetSocialListTab();
+        public abstract IEnumerable<UserID> GetSocialListTab();
     }
 }

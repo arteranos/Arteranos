@@ -12,7 +12,7 @@ using Mirror;
 using Arteranos.Core;
 using System;
 using Arteranos.UI;
-using Arteranos.Social;
+using Arteranos.Core;
 using Random = UnityEngine.Random;
 using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
@@ -108,7 +108,7 @@ namespace Arteranos.Avatar
         public void NotifyBubbleBreached(IAvatarBrain touchy, bool isFriend, bool entered)
         {
             // Not for the desired sphere of influence
-            if (isFriend != SocialState.IsFriends(touchy)) return;
+            if (isFriend != G.UserData.IsFriends(touchy.UserID)) return;
 
             touchy.SetAppearanceStatusBit(Avatar.AppearanceStatus.Bubbled, entered);
         }
@@ -548,11 +548,11 @@ namespace Arteranos.Avatar
 
         public bool IsAbleTo(UserCapabilities cap, IAvatarBrain target)
         {
-            bool friends = (target != null) && SocialState.IsFriendRequested(target);
+            bool friends = (target != null) && G.UserData.IsFriends(target.UserID);
 
-            bool isAnyAdmin = (Core.UserState.IsSAdmin(UserState) || Core.UserState.IsWAdmin(UserState));
+            bool isAnyAdmin = Core.UserState.IsSAdmin(UserState) || Core.UserState.IsWAdmin(UserState);
 
-            bool targetIsAnyAdmin = (target != null && (Core.UserState.IsSAdmin(target.UserState) || Core.UserState.IsWAdmin(target.UserState)));
+            bool targetIsAnyAdmin = target != null && (Core.UserState.IsSAdmin(target.UserState) || Core.UserState.IsWAdmin(target.UserState));
 
             bool userHigher = target == null ||
                 (UserState & Core.UserState.GOOD_MASK) > (target.UserState & Core.UserState.GOOD_MASK);
@@ -594,10 +594,10 @@ namespace Arteranos.Avatar
 
                 // Admins can view user IDs, even if the users don't want to.
                 // Especially for the risk of user impersonation
-                UserCapabilities.CanViewUsersID => isAnyAdmin || (target != null && SocialState.IsPermitted(target, target.UserPrivacy.UIDVisibility)),
+                UserCapabilities.CanViewUsersID => isAnyAdmin || (target != null && Core.Utils.IsPermitted(target.UserID, target.UserPrivacy.UIDVisibility)),
 
                 // Admin can send text, even to higher tiers, for a reason
-                UserCapabilities.CanSendText => isAnyAdmin || (target != null && SocialState.IsPermitted(target, target.UserPrivacy.TextReception)),
+                UserCapabilities.CanSendText => isAnyAdmin || (target != null && Core.Utils.IsPermitted(target.UserID, target.UserPrivacy.TextReception)),
 
                 // Both server and world admins can initiate the world transition
                 UserCapabilities.CanInitiateWorldTransition => isAnyAdmin,
@@ -686,14 +686,22 @@ namespace Arteranos.Avatar
             bool? state = G.UserData.IsStated(target);
             Debug.Log($"{(string)UserID} sends {(string)target} the state: {state}");
             CmdRelayFriendState(target, state);
+
+            // Update 'blocking' state on the alien avatar: true if combined status is 'false', false otherwise.
+            // Target User may be actually offline.
+            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(target);
+            if(targetUser != null) targetUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocking, !(state ?? false));
         }
 
         [Command]
         private void CmdRelayFriendState(UserID target, bool? state)
         {
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(target);
-            NetworkIdentity netid = targetUser.gameObject.GetComponent<NetworkIdentity>();
 
+            // Target User is definitely offline, so stop here.
+            if (targetUser == null) return;
+
+            NetworkIdentity netid = targetUser.gameObject.GetComponent<NetworkIdentity>();
             TargetReceiveFriendState(netid.connectionToClient, UserID, state);
         }
 
@@ -719,6 +727,13 @@ namespace Arteranos.Avatar
                     changed = G.UserData.ReceiveFriend(source, true);
                     break;
             }
+
+            IAvatarBrain sourceUser = G.NetworkStatus.GetOnlineUser(source);
+
+            // Update 'being blocked by' state in the alien avatar: true if combined status is 'false', false otherwise.
+            // We got it so far to have the source, then the target still being online, but the _source_ may have
+            // (rage)quit. Well, no matter.
+            if (sourceUser != null) sourceUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocked, !(state ?? false));
 
             // Announce the reactions from source's change of views.
             // Common example: "You block me?! Then you're not a friend anymore, Bwaaaah!"

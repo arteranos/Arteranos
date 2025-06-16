@@ -59,7 +59,7 @@ namespace Arteranos.UI
             if(Target == null) throw new ArgumentNullException("target");
 
             // If you cannot ban the target, hide the portion of the UI
-            if(!Utils.IsAbleTo(Social.UserCapabilities.CanBanUser, Target))
+            if(!Utils.IsAbleTo(Core.UserCapabilities.CanBanUser, Target))
             {
                 lbl_BanHow.gameObject.SetActive(false);
                 grp_BanHow.SetActive(false);

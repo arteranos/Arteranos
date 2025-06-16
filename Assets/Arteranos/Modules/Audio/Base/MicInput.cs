@@ -82,7 +82,7 @@ namespace Arteranos.Audio
 
         public static MicInput Renew(int? micDeviceId = 0, int? desiredRate = null)
         {
-            MicInput uvmi = FindObjectOfType<MicInput>();
+            MicInput uvmi = FindFirstObjectByType<MicInput>();
             return uvmi.Renew_(micDeviceId, desiredRate);
         }
 

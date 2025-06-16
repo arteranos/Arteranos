@@ -11,7 +11,7 @@ using UnityEngine.UI;
 using TMPro;
 using Arteranos.Avatar;
 using Arteranos.XR;
-using Arteranos.Social;
+using Arteranos.Core;
 using UnityEngine.Diagnostics;
 using System;
 using Arteranos.Common;
@@ -81,9 +81,13 @@ namespace Arteranos.UI
         {
             string capMessage;
 
+            UserID other = Bearer.UserID;
+
             if (Core.Utils.IsAbleTo(UserCapabilities.CanViewUsersID, Bearer))
+            {
                 capMessage = CryptoHelpers.ToString(
-                    Core.Utils.GetUIDFPEncoding(Bearer.UserPrivacy.UIDRepresentation), Bearer.UserID);
+                    Core.Utils.GetUIDFPEncoding(Bearer.UserPrivacy.UIDRepresentation), other);
+            }
             else capMessage = "<Undisclosed user name>";
 
             DateTime now = DateTime.Now;
@@ -91,9 +95,9 @@ namespace Arteranos.UI
             // Overlay the informational message for three out of six seconds.
             if(now.Second % 6 > 2)
             {
-                if (SocialState.IsFriends(Bearer)) capMessage = "Friend";
-                else if (SocialState.IsFriendOffered(Bearer)) capMessage = "Wants to be your friend";
-                else if (SocialState.IsFriendRequested(Bearer)) capMessage = "Friend request sent";
+                if (G.UserData.IsFriends(other)) capMessage = "Friend";
+                else if (G.UserData.IsFriendReceived(other)) capMessage = "Wants to be your friend";
+                else if (G.UserData.IsFriendOffered(other)) capMessage = "Friend request sent";
             }
 
             return capMessage;

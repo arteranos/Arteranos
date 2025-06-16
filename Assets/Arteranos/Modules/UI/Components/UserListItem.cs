@@ -5,20 +5,12 @@
  * residing in the LICENSE.md file in the project's root directory.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 using Arteranos.Avatar;
-using Arteranos.XR;
 using Arteranos.Core;
-using System.Linq;
-using Arteranos.Social;
 using TMPro;
-using Arteranos.Services;
 using Ipfs;
-using UnityEngine.UI;
 using System.Text;
 using Arteranos.Common;
 

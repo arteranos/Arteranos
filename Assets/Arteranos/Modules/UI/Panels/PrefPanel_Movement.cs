@@ -50,7 +50,7 @@ namespace Arteranos.UI
         private bool? oldFlyingPermission = null;
         private void Update()
         {
-            bool flyingPermission = Utils.IsAbleTo(Social.UserCapabilities.CanEnableFly, null);
+            bool flyingPermission = Utils.IsAbleTo(Core.UserCapabilities.CanEnableFly, null);
 
             if(flyingPermission != oldFlyingPermission)
             {

@@ -12,7 +12,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 using Arteranos.Avatar;
-using Arteranos.Social;
+using Arteranos.Core;
 using UnityEngine.UI;
 using System.IO;
 using System.Threading.Tasks;
@@ -118,6 +118,23 @@ namespace Arteranos.Core
             if (target > current) current += Time.deltaTime / duration;
             if (target < current) current -= Time.deltaTime / duration;
             current = Mathf.Clamp01(current);
+        }
+
+        /// <summary>
+        /// checks if the action (like seeing someone's user name or sending texts) is permitted
+        /// </summary>
+        /// <param name="target">The target user</param>
+        /// <param name="visibility">The target's visibility setting, or your setting if this action is being remotely invoked</param>
+        /// <returns>Self explanatory.</returns>
+        public static bool IsPermitted(UserID target, UserVisibility visibility)
+        {
+            return visibility switch
+            {
+                UserVisibility.none => false,
+                UserVisibility.friends => G.UserData.IsFriends(target),
+                UserVisibility.everyone => true,
+                _ => throw new System.NotImplementedException() // Not gonna happen. Supposedly...
+            };
         }
 
         /// <summary>

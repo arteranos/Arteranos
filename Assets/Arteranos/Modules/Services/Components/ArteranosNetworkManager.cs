@@ -9,7 +9,6 @@ using Arteranos.UI;
 using Ipfs.Cryptography.Proto;
 using Arteranos.Common.Cryptography;
 using System.Collections;
-using Arteranos.Social;
 using System.Linq;
 using Ipfs;
 using System.IO;

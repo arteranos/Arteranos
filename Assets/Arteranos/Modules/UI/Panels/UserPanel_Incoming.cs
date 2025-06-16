@@ -8,23 +8,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using Arteranos.Common;
-using Arteranos.Core;
-using Arteranos.Social;
 
 namespace Arteranos.UI
 {
     public class UserPanel_Incoming : UserPanelBase
     {
-        public override IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> GetSocialListTab()
+        public override IEnumerable<UserID> GetSocialListTab()
         {
-            IEnumerable<KeyValuePair<UserID, UserSocialEntryJSON>> list = Enumerable.Empty<KeyValuePair<UserID, UserSocialEntryJSON>>(); // TODO Stub
-            foreach(KeyValuePair<UserID, UserSocialEntryJSON> entry in list) yield return entry;
-        }
-
-        private bool IsFriendReceived(KeyValuePair<UserID, UserSocialEntryJSON> arg)
-        {
-            return SocialState.IsFriendOffered(arg.Value.State)
-                && !SocialState.IsFriendRequested(arg.Value.State);
+             return from entry in G.NetworkStatus.GetOnlineUsers()
+                         where entry != G.Me && G.UserData.IsFriendReceived(entry.UserID)
+                         select entry.UserID;
         }
     }
 }

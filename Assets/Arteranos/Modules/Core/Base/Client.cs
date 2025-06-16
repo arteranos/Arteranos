@@ -191,16 +191,6 @@ namespace Arteranos.Core
         public ComfortBlindersType ComfortBlinders { get; set; } = ComfortBlindersType.Off;
     }
 
-    [Obsolete("Unnecessary. Combined state will be bool?: false - Blocked; true - Friend; null - neither")]
-    public class UserSocialEntryJSON
-    {
-        // The user's friend (or blocked) state
-        public ulong State { get; set; } = 0;
-
-        // The user's Icon file CID, if available
-        public Cid Icon { get; set; } = null;
-    }
-
     public class UserDataSettingsJSON
     {
         // LEGACY - User's signature key pair

@@ -48,7 +48,5 @@ namespace Arteranos.Avatar
         public static bool IsSilent(int status) => (status != OK); // Being invisible implies being silent, too.
 
         public static bool IsInvisible(int status) => ((status & MASK_VIDEO) != OK);
-
-        public static bool IsLocal(int status) => ((status & MASK_LOCAL) != OK);
     }    
 }

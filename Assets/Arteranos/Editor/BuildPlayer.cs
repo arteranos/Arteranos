@@ -63,18 +63,18 @@ namespace Arteranos.Editor
             Version.MMP = $"{Version.Major}.{Version.Minor}.{Version.Patch}";
             Version.MMPB = $"{Version.MMP}.{Version.B}";
 
-            if(parts.Length > 3)
-                Version.Tag = "-"+string.Join("-", parts[1..^2]);
+            if (parts.Length > 3)
+                Version.Tag = "-" + string.Join("-", parts[1..^2]);
 
             Version.Full = $"{Version.MMP}.{Version.B}{Version.Tag}-{Version.Hash}";
 
             string json = JsonConvert.SerializeObject(Version, Formatting.Indented);
             TextAsset textAsset = new(json);
 
-            if(!Directory.Exists("Assets/Generated"))
+            if (!Directory.Exists("Assets/Generated"))
                 AssetDatabase.CreateFolder("Assets", "Generated");
 
-            if(!Directory.Exists("Assets/Generated/Resources"))
+            if (!Directory.Exists("Assets/Generated/Resources"))
                 AssetDatabase.CreateFolder("Assets/Generated", "Resources");
 
             AssetDatabase.CreateAsset(textAsset, "Assets/Generated/Resources/Version.asset");
@@ -84,17 +84,17 @@ namespace Arteranos.Editor
             string WiXFileText =
 @"<?xml version='1.0' encoding='utf-8' ?>
 
-<?define version = """+ Version.MMP + @""" ?>
-<?define fullversion = """+ Version.Full + @""" ?>
+<?define version = """ + Version.MMP + @""" ?>
+<?define fullversion = """ + Version.Full + @""" ?>
 
 <Include xmlns='http://schemas.microsoft.com/wix/2006/wi'>
   
 </Include>
 ";
-            if(!Directory.Exists("build"))
+            if (!Directory.Exists("build"))
                 Directory.CreateDirectory("build");
 
-            File.WriteAllText("build/WiXVersion.wxi",WiXFileText);
+            File.WriteAllText("build/WiXVersion.wxi", WiXFileText);
         }
 
         public static void UpdateLicenseFiles()
@@ -169,6 +169,17 @@ namespace Arteranos.Core
                 yield return BuildWin64DSCoroutine();
 
                 yield return BuildWin64Coroutine();
+
+                // Reset build setting and force domain load, to prevent subsequent 
+                // confusions in the editor
+                yield return CommenceBuild(new BuildPlayerOptions()
+                {
+                    target = BuildTarget.StandaloneLinux64,
+                    subtarget = (int)StandaloneBuildSubtarget.Player,
+                }, false);
+
+                BumpForceReloadFile();
+
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
@@ -266,7 +277,8 @@ namespace Arteranos.Core
 
         private static string IPFSExePath
         {
-            get {
+            get
+            {
                 return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? $"{Environment.GetEnvironmentVariable("ProgramData")}\\arteranos\\arteranos\\ipfs.exe"
                     : $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/arteranos/arteranos/ipfs";
@@ -379,7 +391,7 @@ namespace Arteranos.Core
                 from file in files
                 select Path.GetFileName(file)
             ).ToArray();
-            
+
             string fileargs = $"{string.Join(" ", files)}";
 
             yield return Execute("sha256sum", fileargs, stdoutCallback: str => sums = str);
@@ -431,19 +443,19 @@ namespace Arteranos.Core
             string buildTargetDir = $"{(isServer ? "server" : "desktop")}-{(isLinux ? "Linux" : "Win")}-amd64";
             string buildTargetName = $"{appName}{(isServer ? "-Server" : "")}{(isLinux ? "" : ".exe")}";
 
-            if(buildStep)
+            bpo.locationPathName = $"build/{buildTargetDir}/{buildTargetName}";
+            bpo.scenes = GetSceneNames();
+            bpo.options = BuildOptions.CleanBuildCache;
+            bpo.extraScriptingDefines = isServer ? new[] { "UNITY_SERVER" } : new string[0];
+
+            string buildLocation = Path.GetDirectoryName(bpo.locationPathName);
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, bpo.target);
+            EditorUserBuildSettings.standaloneBuildSubtarget = (StandaloneBuildSubtarget)bpo.subtarget;
+            EditorUserBuildSettings.SetBuildLocation(BuildTarget.StandaloneWindows64, $"{buildLocation}/");
+
+            if (buildStep)
             {
                 BumpForceReloadFile();
-
-                bpo.locationPathName = $"build/{buildTargetDir}/{buildTargetName}";
-                bpo.scenes = GetSceneNames();
-                bpo.options = BuildOptions.CleanBuildCache;
-                bpo.extraScriptingDefines = isServer ? new[] { "UNITY_SERVER" } : new string[0];
-
-                string buildLocation = Path.GetDirectoryName(bpo.locationPathName);
-                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, bpo.target);
-                EditorUserBuildSettings.standaloneBuildSubtarget = (StandaloneBuildSubtarget)bpo.subtarget;
-                EditorUserBuildSettings.SetBuildLocation(BuildTarget.StandaloneWindows64, $"{buildLocation}/");
 
                 BuildReport report = BuildPipeline.BuildPlayer(bpo);
                 summary = report.summary;
@@ -451,7 +463,7 @@ namespace Arteranos.Core
 
             if (summary.result == BuildResult.Unknown)
             {
-                Debug.Log("No build run.");
+                if (buildStep) Debug.Log("No build run.");
                 yield break;
             }
             else if (summary.result != BuildResult.Succeeded)
@@ -463,7 +475,7 @@ namespace Arteranos.Core
             yield return CreateBuildOutputTar(buildTargetDir);
 
             yield return HashBuildOutput(buildTargetDir);
-            
+
             Debug.Log($"Build succeeded: {summary.totalSize} bytes, {summary.totalTime} time.");
         }
 
@@ -602,21 +614,21 @@ namespace Arteranos.Core
 
                 StringBuilder fileArgs = new();
 
-                foreach(string entry in Directory.GetFiles(dir))
+                foreach (string entry in Directory.GetFiles(dir))
                 {
-                    if(fileArgs.Length > 0) fileArgs.Append(" ");
+                    if (fileArgs.Length > 0) fileArgs.Append(" ");
                     fileArgs.Append("\"");
                     fileArgs.Append(entry);
                     fileArgs.Append("\"");
 
-                    if(fileArgs.Length > 512)
+                    if (fileArgs.Length > 512)
                     {
                         yield return HashEntriesChunk(fileArgs, rootPath);
                         fileArgs = new();
                     }
                 }
 
-                if(fileArgs.Length > 0)
+                if (fileArgs.Length > 0)
                     yield return HashEntriesChunk(fileArgs, rootPath);
             }
 

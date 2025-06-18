@@ -5,19 +5,15 @@
  * residing in the LICENSE.md file in the project's root directory.
  */
 
-using Arteranos.Core;
 using Arteranos.Common.Cryptography;
 using Ipfs;
 using Ipfs.Cryptography.Proto;
 using Ipfs.Http;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
-using UnityEngine;
-using Debug = UnityEngine.Debug;
 using Arteranos.Common;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace Arteranos.Services
 {
@@ -52,21 +48,26 @@ namespace Arteranos.Services
         public static Status CheckRepository()
         {
             if (_RepoExists ?? false) return Status.OK;
-              
+
+            Status res = Status.CommandFailed;
+
             RepoDir = $"{ConfigUtils.persistentDataPath}/.ipfs";
 
             try
             {
                 _ = IpfsClientEx.ReadDaemonPrivateKey(RepoDir);
+
+                _RepoExists = true;
+                res = Status.OK;
             }
             catch
             {
                 _RepoExists = false;
-                return Status.NoRepository;
+                res = Status.NoRepository;
             }
 
-            _RepoExists = true;
-            return Status.OK;
+            Debug.Log($"Checking IPFS repository ({RepoDir}) ... {res}");
+            return res;
         }
 
         public static Status StopDaemon()
@@ -98,6 +99,7 @@ namespace Arteranos.Services
             catch { }
 
             APIPort = port;
+            Debug.Log($"Repository says API address to be: {APIPort}");
             return port;
         }
 
@@ -107,7 +109,11 @@ namespace Arteranos.Services
 
             if (port < 0) return Status.NoRepository;
 
-            IpfsClientEx ipfs = new($"http://localhost:{port}");
+            string host = $"http://localhost:{port}";
+
+            Debug.Log($"Trying to connect to {host}...");
+
+            IpfsClientEx ipfs = new(host);
 
             for(int i = 0;  i < attempts; i++)
             {
@@ -135,12 +141,14 @@ namespace Arteranos.Services
 
                 Self = await ipfs.IdAsync();
             }
-            catch // (Exception ex)
+            catch (System.Exception ex)
             {
-                // Debug.LogError(ex);
+                Debug.LogError(ex);
+                Debug.Log("Node's daemon is unresponsive, or don't match with this repository.");
                 return Status.PortSquatter;
             }
 
+            Debug.Log("Daemon connect OK");
             return Status.OK;
         }
     }

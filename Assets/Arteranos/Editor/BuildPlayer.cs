@@ -170,19 +170,33 @@ namespace Arteranos.Core
 
                 yield return BuildWin64Coroutine();
 
-                // Reset build setting and force domain load, to prevent subsequent 
-                // confusions in the editor
-                yield return CommenceBuild(new BuildPlayerOptions()
-                {
-                    target = BuildTarget.StandaloneLinux64,
-                    subtarget = (int)StandaloneBuildSubtarget.Player,
-                }, false);
-
-                BumpForceReloadFile();
-
+                yield return ResetBuildSettings();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
+        }
+
+        private static IEnumerator ResetBuildSettings()
+        {
+            RuntimePlatform p = Application.platform;
+
+            BuildTarget t = p switch
+            {
+                RuntimePlatform.LinuxEditor or
+                RuntimePlatform.LinuxPlayer or
+                RuntimePlatform.LinuxServer => BuildTarget.StandaloneLinux64,
+                _ => BuildTarget.StandaloneWindows64
+            };
+
+            // Reset build setting and force domain load, to prevent subsequent 
+            // confusions in the editor
+            yield return CommenceBuild(new BuildPlayerOptions()
+            {
+                target = t,
+                subtarget = (int)StandaloneBuildSubtarget.Player,
+            }, false);
+
+            BumpForceReloadFile();
         }
 
         [MenuItem("Arteranos/Build/Build Windows64", false, 140)]
@@ -192,6 +206,7 @@ namespace Arteranos.Core
             {
                 GetProjectGitVersion();
                 yield return BuildWin64Coroutine();
+                yield return ResetBuildSettings();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
@@ -204,6 +219,7 @@ namespace Arteranos.Core
             {
                 GetProjectGitVersion();
                 yield return BuildWin64DSCoroutine();
+                yield return ResetBuildSettings();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
@@ -216,6 +232,7 @@ namespace Arteranos.Core
             {
                 GetProjectGitVersion();
                 yield return BuildLinux64Coroutine();
+                yield return ResetBuildSettings();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());
@@ -228,6 +245,7 @@ namespace Arteranos.Core
             {
                 GetProjectGitVersion();
                 yield return BuildLinux64DSCoroutine();
+                yield return ResetBuildSettings();
             }
 
             EditorCoroutineUtility.StartCoroutineOwnerless(SingleTask());

@@ -12,14 +12,8 @@ namespace Arteranos.Core
     public class UserData : UserDataJSON
     {
         public UserData() : base() { }
-        public UserData(UserDataJSON udj)
-        {
-            SignKeyPair = udj.SignKeyPair;
-            Nickname = udj.Nickname;
-            Icon = udj.Icon;
+        public UserData(UserDataJSON udj) : base(udj) { }
 
-            _dirty = false;
-        }
         public override bool OfferFriend(UserID target, bool offering)
         {
             bool changed = base.OfferFriend(target, offering);
@@ -28,6 +22,14 @@ namespace Arteranos.Core
                 if (G.Me != null) G.Me.RelayFriendState(target);
                 Save();
             }
+
+            return changed;
+        }
+
+        public override bool ReceiveFriend(UserID target, bool receiving)
+        {
+            bool changed = base.ReceiveFriend(target, receiving);
+            Save();
 
             return changed;
         }

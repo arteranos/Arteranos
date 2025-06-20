@@ -6,7 +6,6 @@
  */
 
 using System.Collections.Generic;
-
 using Arteranos.Common;
 using System.Linq;
 
@@ -16,9 +15,9 @@ namespace Arteranos.UI
     {
         public override IEnumerable<UserID> GetSocialListTab()
         {
-             return from entry in G.NetworkStatus.GetOnlineUsers()
-                         where entry != G.Me && G.UserData.IsImposingBlock(entry.UserID)
-                         select entry.UserID;
+             return from entry in G.UserData.GetAllStates()
+                         where entry.blockImposed
+                         select entry.target;
         }
     }
 }

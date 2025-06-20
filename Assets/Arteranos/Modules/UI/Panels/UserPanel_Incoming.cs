@@ -15,9 +15,9 @@ namespace Arteranos.UI
     {
         public override IEnumerable<UserID> GetSocialListTab()
         {
-             return from entry in G.NetworkStatus.GetOnlineUsers()
-                         where entry != G.Me && G.UserData.IsFriendReceived(entry.UserID)
-                         select entry.UserID;
+             return from entry in G.UserData.GetAllStates()
+                         where !entry.friendOffered && entry.friendReceived
+                         select entry.target;
         }
     }
 }

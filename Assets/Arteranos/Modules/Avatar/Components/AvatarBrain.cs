@@ -12,7 +12,6 @@ using Mirror;
 using Arteranos.Core;
 using System;
 using Arteranos.UI;
-using Arteranos.Core;
 using Random = UnityEngine.Random;
 using Arteranos.Common.Cryptography;
 using Ipfs.Cryptography.Proto;
@@ -150,8 +149,15 @@ namespace Arteranos.Avatar
 
         public override void OnStartClient()
         {
-            IEnumerator GreetOtherUsers(List<UserID> users)
+            IEnumerator GreetOtherUsers()
             {
+                yield return new WaitForSeconds(0.5f);
+
+                IEnumerable<UserID> q = from entry in G.NetworkStatus.GetOnlineUsers()
+                                        select entry.UserID;
+
+                List<UserID> users = q.ToList();
+
                 for (int i = 0; i < users.Count; i++)
                 {
                     UserID entry = users[i];
@@ -161,6 +167,13 @@ namespace Arteranos.Avatar
 
                     yield return new WaitForEndOfFrame();
                 }
+            }
+
+            IEnumerator GreetOtherUser()
+            {
+                yield return new WaitForSeconds(0.5f);
+
+                if (G.Me != null) G.Me.RelayFriendState(UserID);
             }
 
             Client cs = G.Client;
@@ -184,9 +197,7 @@ namespace Arteranos.Avatar
                 StartCoroutine(DoTextMessageLoopCoroutine());
 
                 // We've just arrived at a party, now do the shaking hands....
-                IEnumerable<UserID> q = from entry in G.NetworkStatus.GetOnlineUsers()
-                                        select entry.UserID;
-                StartCoroutine(GreetOtherUsers(q.ToList()));
+                StartCoroutine(GreetOtherUsers());
             }
             else
             {
@@ -194,7 +205,7 @@ namespace Arteranos.Avatar
                 HitBox = Factories.NewHitBox(this);
 
                 // We've not the last guest to arrive. Or they're just stragglers.
-                if (G.Me != null) G.Me.RelayFriendState(UserID);
+                StartCoroutine(GreetOtherUser());
             }
         }
 
@@ -679,65 +690,87 @@ namespace Arteranos.Avatar
         #endregion
         // ---------------------------------------------------------------
         #region Friend/Block state handling
+
+        private string DisplayState(bool? state) => state switch
+        {
+            false => "disfavored",
+            null => "neutral",
+            true => "favored"
+        };
+
         public void RelayFriendState(UserID target)
         {
             if (!isLocalPlayer) throw new InvalidOperationException("Internal error: not owner");
 
-            bool? state = G.UserData.IsStated(target);
-            Debug.Log($"{(string)UserID} sends {(string)target} the state: {state}");
-            CmdRelayFriendState(target, state);
+            bool? state = G.UserData.IsStated(target, true);
+            Debug.Log($"{(string)UserID} sends {(string)target} the state: {DisplayState(state)}");
 
             // Update 'blocking' state on the alien avatar: true if combined status is 'false', false otherwise.
             // Target User may be actually offline.
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(target);
-            if(targetUser != null) targetUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocking, !(state ?? false));
+            CmdRelayFriendState(targetUser.gameObject, state);
+            // if (targetUser != null) targetUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocking, !(state ?? false));
         }
 
         [Command]
-        private void CmdRelayFriendState(UserID target, bool? state)
+        private void CmdRelayFriendState(GameObject target, bool? state)
         {
-            IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(target);
+            AvatarBrain targetUser = target.GetComponent<AvatarBrain>();
 
             // Target User is definitely offline, so stop here.
-            if (targetUser == null) return;
+            if (target == null) return;
 
-            NetworkIdentity netid = targetUser.gameObject.GetComponent<NetworkIdentity>();
-            TargetReceiveFriendState(netid.connectionToClient, UserID, state);
+            Debug.Log($"Relaying from {(string) UserID} to {(string) targetUser.UserID} the status: {DisplayState(state)}");
+
+            NetworkIdentity netid = target.GetComponent<NetworkIdentity>();
+            targetUser.ReceiveFriendState(netid.connectionToClient, gameObject, state);
         }
 
+        private void ReceiveFriendState(NetworkConnectionToClient target, GameObject source, bool? state)
+            => TargetReceiveFriendState(target, source, state);
+
         [TargetRpc]
-        private void TargetReceiveFriendState(NetworkConnectionToClient target, UserID source, bool? state)
+        private void TargetReceiveFriendState(NetworkConnectionToClient target, GameObject source, bool? state)
         {
             _ = target; // For TargetRpc's client targeting
 
-            Debug.Log($"{(string)UserID} got from {(string)source} the status: {state}");
+            IAvatarBrain sourceUser = source.GetComponent<IAvatarBrain>();
+
+            UserID sourceID = sourceUser.UserID;
+
+            // TargetRpc broadcasts to all copies of a user throughout all clients, both local and alien.
+            if (!isLocalPlayer)
+            {
+                Debug.Log($"{(string)UserID} got from {(string)sourceID} the status: {DisplayState(state)} - dismissedf");
+                return;
+            }
+
+            Debug.Log($"{(string)UserID} got from {(string)sourceID} the status: {DisplayState(state)}");
 
             bool changed = false;
 
             switch (state)
             {
                 case false:
-                    changed = G.UserData.ReceiveBlock(source, true);
+                    changed = G.UserData.ReceiveBlock(sourceID, true);
                     break;
                 case null:
-                    changed = G.UserData.ReceiveBlock(source, false);
-                    changed |= G.UserData.ReceiveFriend(source, false);
+                    changed = G.UserData.ReceiveBlock(sourceID, false);
+                    changed |= G.UserData.ReceiveFriend(sourceID, false);
                     break;
                 case true:
-                    changed = G.UserData.ReceiveFriend(source, true);
+                    changed = G.UserData.ReceiveFriend(sourceID, true);
                     break;
             }
-
-            IAvatarBrain sourceUser = G.NetworkStatus.GetOnlineUser(source);
 
             // Update 'being blocked by' state in the alien avatar: true if combined status is 'false', false otherwise.
             // We got it so far to have the source, then the target still being online, but the _source_ may have
             // (rage)quit. Well, no matter.
-            if (sourceUser != null) sourceUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocked, !(state ?? false));
+            // if (sourceUser != null) sourceUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocked, !(state ?? false));
 
             // Announce the reactions from source's change of views.
             // Common example: "You block me?! Then you're not a friend anymore, Bwaaaah!"
-            if (changed) RelayFriendState(source);
+            // if (changed) RelayFriendState(sourceID);
         }
 
         #endregion

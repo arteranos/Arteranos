@@ -138,33 +138,25 @@ namespace Arteranos.UI
 
         private void GotAddFriendButtonClick()
         {
-            bool changed = G.UserData.OfferFriend(TargetUserID, true);
-            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
-
+            G.UserData.OfferFriend(TargetUserID, true);
             G.UserData.Save();
         }
 
         private void GotDelFriendButtonClick()
         {
-            bool changed = G.UserData.OfferFriend(TargetUserID, false);
-            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
-
+            G.UserData.OfferFriend(TargetUserID, false);
             G.UserData.Save();
         }
 
         private void GotBlockButtonClick()
         {
-            bool changed = G.UserData.ImposeBlock(TargetUserID, true);
-            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
-
+            G.UserData.ImposeBlock(TargetUserID, true);
             G.UserData.Save();
         }
 
         private void GotUnblockButtonClick()
         {
-            bool changed = G.UserData.ImposeBlock(TargetUserID, false);
-            if (changed) Debug.LogError("Not implemented: tell server to relay changed state");
-
+            G.UserData.ImposeBlock(TargetUserID, false);
             G.UserData.Save();
         }
 

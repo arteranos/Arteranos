@@ -25,6 +25,8 @@ namespace Arteranos.UI
             get => m_Path;
             set
             {
+                if (m_Path == value) return;
+                
                 m_Path = value;
                 RestartLoader();
             }
@@ -35,6 +37,8 @@ namespace Arteranos.UI
             get => m_ImageData;
             set
             {
+                if (m_ImageData == value) return;
+
                 m_Path = null;
                 m_ImageData = value;
                 RestartLoader();

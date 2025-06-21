@@ -703,13 +703,15 @@ namespace Arteranos.Avatar
             if (!isLocalPlayer) throw new InvalidOperationException("Internal error: not owner");
 
             bool? state = G.UserData.IsStated(target, true);
-            Debug.Log($"{(string)UserID} sends {(string)target} the state: {DisplayState(state)}");
+            // Debug.Log($"{(string)UserID} sends {(string)target} the state: {DisplayState(state)}");
 
             // Update 'blocking' state on the alien avatar: true if combined status is 'false', false otherwise.
             // Target User may be actually offline.
             IAvatarBrain targetUser = G.NetworkStatus.GetOnlineUser(target);
+            if (targetUser == null) return;
+
             CmdRelayFriendState(targetUser.gameObject, state);
-            // if (targetUser != null) targetUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocking, !(state ?? false));
+            targetUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocking, state == false);
         }
 
         [Command]
@@ -720,7 +722,7 @@ namespace Arteranos.Avatar
             // Target User is definitely offline, so stop here.
             if (target == null) return;
 
-            Debug.Log($"Relaying from {(string) UserID} to {(string) targetUser.UserID} the status: {DisplayState(state)}");
+            // Debug.Log($"Relaying from {(string) UserID} to {(string) targetUser.UserID} the status: {DisplayState(state)}");
 
             NetworkIdentity netid = target.GetComponent<NetworkIdentity>();
             targetUser.ReceiveFriendState(netid.connectionToClient, gameObject, state);
@@ -741,11 +743,11 @@ namespace Arteranos.Avatar
             // TargetRpc broadcasts to all copies of a user throughout all clients, both local and alien.
             if (!isLocalPlayer)
             {
-                Debug.Log($"{(string)UserID} got from {(string)sourceID} the status: {DisplayState(state)} - dismissedf");
+                Debug.LogWarning($"{(string)UserID} got from {(string)sourceID} the status: {DisplayState(state)} - BOGUS");
                 return;
             }
 
-            Debug.Log($"{(string)UserID} got from {(string)sourceID} the status: {DisplayState(state)}");
+            // Debug.Log($"{(string)UserID} got from {(string)sourceID} the status: {DisplayState(state)}");
 
             bool changed = false;
 
@@ -766,11 +768,11 @@ namespace Arteranos.Avatar
             // Update 'being blocked by' state in the alien avatar: true if combined status is 'false', false otherwise.
             // We got it so far to have the source, then the target still being online, but the _source_ may have
             // (rage)quit. Well, no matter.
-            // if (sourceUser != null) sourceUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocked, !(state ?? false));
+            sourceUser.SetAppearanceStatusBit(Avatar.AppearanceStatus.Blocked, state == false);
 
             // Announce the reactions from source's change of views.
             // Common example: "You block me?! Then you're not a friend anymore, Bwaaaah!"
-            // if (changed) RelayFriendState(sourceID);
+            if (changed) RelayFriendState(sourceID);
         }
 
         #endregion

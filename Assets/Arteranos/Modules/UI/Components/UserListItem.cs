@@ -117,13 +117,13 @@ namespace Arteranos.UI
 
                 bool friends = G.UserData.IsFriendOffered(TargetUserID);
 
-                bool blocked = G.UserData.IsBlocked(TargetUserID);
+                bool blocking = G.UserData.IsImposingBlock(TargetUserID);
 
-                btn_AddFriend.gameObject.SetActive(!friends && !blocked);
-                btn_DelFriend.gameObject.SetActive(friends && !blocked);
+                btn_AddFriend.gameObject.SetActive(!friends && !blocking);
+                btn_DelFriend.gameObject.SetActive(friends && !blocking);
 
-                btn_Block.gameObject.SetActive(!blocked && !friends);
-                btn_Unblock.gameObject.SetActive(blocked && !friends);
+                btn_Block.gameObject.SetActive(!blocking && !friends);
+                btn_Unblock.gameObject.SetActive(blocking && !friends);
 
                 // Cannot send texts to offline users. They could want to deny them.
                 if (targetUser != null && G.Me != null)

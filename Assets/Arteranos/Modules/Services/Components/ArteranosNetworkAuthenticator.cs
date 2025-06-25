@@ -567,10 +567,17 @@ namespace Arteranos.Services
 
             if (msg.status != HttpStatusCode.OK)
             {
+                G.ConnectionManager.ExpectConnectionResponse();
+
                 G.ConnectionManager.DeliverDisconnectReason(msg.message);
 
-                // Just only some formality, the server will disconnect anyway.
                 ClientReject();
+
+                // FIXME ClientReject() *should* set the disconnected state?!
+                G.NetworkStatus.StopHost(true);
+
+                // Drop back to the Offline world.
+                //StartCoroutine(TransitionProgress.TransitionTo(null));
             }
             else
             {

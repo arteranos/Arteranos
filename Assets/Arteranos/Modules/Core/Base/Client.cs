@@ -516,7 +516,7 @@ namespace Arteranos.Core
             // Still a no go. Generate, and save
             if (!G.UserData)
             {
-                G.UserData = (UserData) UserDataJSON.Generate();
+                G.UserData = new(UserDataJSON.Generate());
                 G.UserData.Nickname = SessionConstants.Instance.DefaultUserName;
             }
 

@@ -64,13 +64,9 @@ namespace Arteranos.WorldEdit
         }
 
         private void GotValueChanged(int arg1, bool arg2)
-        {
-            Parent.GotACLEntryChanged(m_UserID, Permission);
-        }
+            => Parent.GotACLEntryChanged(m_UserID, Permission);
 
         private void GotRemoveClicked()
-        {
-            Parent.GotACLEntryChanged(m_UserID, null);
-        }
+            => Parent.GotACLEntryChanged(m_UserID, null);
     }
 }

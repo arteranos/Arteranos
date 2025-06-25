@@ -33,12 +33,12 @@ namespace Arteranos.WorldEdit
         [SerializeField] private Spinner spn_addUser;
         [SerializeField] private Button btn_addUser;
 
-        private WorldAccessInfo accessInfo => G.WorldEditorData.WorldAccessInfo;
+        private WorldAccessInfo _accessInfo => G.WorldEditorData.WorldAccessInfo;
 
-        private string titlePattern = null;
+        private string _titlePattern = null;
 
-        private List<ACLEntry> aclEntries = null;
-        private List<UserID> usersToAdd = null;
+        private List<ACLEntry> _aclEntries = null;
+        private List<UserID> _usersToAdd = null;
 
         protected override void Awake()
         {
@@ -48,12 +48,15 @@ namespace Arteranos.WorldEdit
             obc_CustomPermissions.OnPopulateTile += PopulateTile;
 
             btn_addUser.onClick.AddListener(GotAddUser);
+            spn_DefaultPermission.OnChanged += GotDefaultChanged;
         }
 
         protected override void OnDestroy()
         {
             obc_CustomPermissions.OnShowingPage -= PreparePage;
             obc_CustomPermissions.OnPopulateTile -= PopulateTile;
+
+            spn_DefaultPermission.OnChanged -= GotDefaultChanged;
 
             base.OnDestroy();
         }
@@ -68,13 +71,13 @@ namespace Arteranos.WorldEdit
 
                 yield return world.WorldInfo.WaitFor();
 
-                titlePattern ??= lbl_title.text;
+                _titlePattern ??= lbl_title.text;
 
                 WorldInfo info = world.WorldInfo;
 
-                lbl_title.text = string.Format(titlePattern, info.WorldName, (string)info.Author);
+                lbl_title.text = string.Format(_titlePattern, info.WorldName, (string)info.Author);
 
-                spn_DefaultPermission.value = (int)accessInfo.DefaultLevel;
+                spn_DefaultPermission.value = (int)_accessInfo.DefaultLevel;
 
                 RebuildACLView();
 
@@ -88,28 +91,38 @@ namespace Arteranos.WorldEdit
 
         private void RebuildPossibleUsers()
         {
-            // throw new NotImplementedException();
+            IEnumerable<UserID> q = from entry in G.UserData.GetAllStates()
+                                    where entry.friendOffered
+                                    select entry.target;
+
+            _usersToAdd = q.ToList();
+
+            if (_usersToAdd.Count > 0)
+            {
+                spn_addUser.Options = (from entry in _usersToAdd select (string)entry).ToArray();
+                spn_addUser.value = 0;
+            }
         }
 
         private void RebuildACLView()
         {
-            accessInfo.UserALs ??= new();
+            _accessInfo.UserALs ??= new();
 
             // Sort names. OrderedDictionary is not available for us.
-            List<UserID> list = accessInfo.UserALs.Keys.ToList();
+            List<UserID> list = _accessInfo.UserALs.Keys.ToList();
             list.Sort((x, y) => x.Nickname.CompareTo(y.Nickname));
 
-            aclEntries = (from entry in list
-                          select new ACLEntry()
-                          {
-                              user = entry,
-                              accessLevel = accessInfo.UserALs[entry],
-                          }).ToList();
+            _aclEntries = (from entry in list
+                           select new ACLEntry()
+                           {
+                               user = entry,
+                               accessLevel = _accessInfo.UserALs[entry],
+                           }).ToList();
         }
 
         private void PopulateTile(int index, GameObject @object)
         {
-            ACLEntry entry = aclEntries[index];
+            ACLEntry entry = _aclEntries[index];
 
             WorldPermissionListItem item = @object.GetComponent<WorldPermissionListItem>();
             item.Parent = this;
@@ -119,14 +132,14 @@ namespace Arteranos.WorldEdit
 
         private void PreparePage(int obj)
         {
-            obc_CustomPermissions.UpdateItemCount(aclEntries.Count);
+            obc_CustomPermissions.UpdateItemCount(_aclEntries.Count);
         }
 
         private void GotAddUser()
         {
-            UserID newUser = usersToAdd[spn_addUser.value];
+            UserID newUser = _usersToAdd[spn_addUser.value];
 
-            accessInfo.UserALs[newUser] = WorldAccessInfoLevel.Nothing;
+            _accessInfo.UserALs[newUser] = WorldAccessInfoLevel.Nothing;
 
             RebuildACLView();
 
@@ -135,10 +148,10 @@ namespace Arteranos.WorldEdit
 
         public void GotACLEntryChanged(UserID userID, WorldAccessInfoLevel? newLevel)
         {
-            if(newLevel == null)
+            if (newLevel == null)
             {
                 // Entry to remove
-                accessInfo.UserALs.Remove(userID);
+                _accessInfo.UserALs.Remove(userID);
                 RebuildACLView();
 
                 // If applicable, put user to the candidates to re-add
@@ -149,12 +162,15 @@ namespace Arteranos.WorldEdit
             else
             {
                 // Entry to change
-                accessInfo.UserALs[userID] = newLevel.Value;
+                _accessInfo.UserALs[userID] = newLevel.Value;
 
                 // ... maybe just RebuildACL() ?
-                ACLEntry entry = aclEntries.Find(e => e.user == userID);
+                ACLEntry entry = _aclEntries.Find(e => e.user == userID);
                 if (entry != null) entry.accessLevel = newLevel.Value;
             }
         }
+
+        private void GotDefaultChanged(int arg1, bool arg2)
+            => _accessInfo.DefaultLevel = (WorldAccessInfoLevel)spn_DefaultPermission.value;
     }
 }

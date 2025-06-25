@@ -26,8 +26,8 @@ namespace Arteranos.Core
             if(IsBanned(user)) return false;
 
             return UserALs.ContainsKey(user)
-                ? neededAL >= UserALs[user]
-                : neededAL >= DefaultLevel;
+                ? neededAL <= UserALs[user]
+                : neededAL <= DefaultLevel;
         }
 
         public void ModifyAL(UserID userID, WorldAccessInfoLevel neededAL) 

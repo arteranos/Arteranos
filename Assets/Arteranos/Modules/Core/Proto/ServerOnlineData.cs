@@ -16,6 +16,7 @@ namespace Arteranos.Core
     [ProtoContract]
     public partial class ServerOnlineData : PeerMessage
     {
+        [Obsolete("See #208")]
         [ProtoMember(1)]
         public string CurrentWorldCid;
 

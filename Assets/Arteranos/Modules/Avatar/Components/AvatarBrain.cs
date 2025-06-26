@@ -600,8 +600,8 @@ namespace Arteranos.Avatar
                 // Edit server configuration itself (server admins and its deputies)
                 UserCapabilities.CanEditServer => Core.UserState.IsSAdmin(UserState),
 
-                // Edit world itself, both the world authors and the server admin.
-                UserCapabilities.CanEditWorld => isAnyAdmin,
+                // Edit world itself, admitted by the current world's ACL itself
+                UserCapabilities.CanEditWorld => G.World?.World != null && G.World.World.CanEdit(UserID),
 
                 // Admins can view user IDs, even if the users don't want to.
                 // Especially for the risk of user impersonation

@@ -148,6 +148,9 @@ namespace Arteranos.Core
 
         public static bool IsAbleTo(IAvatarBrain source, UserCapabilities cap, IAvatarBrain target)
         {
+            // Technical considerations: No editing of the offline world
+            if (G.World?.World == null && cap == UserCapabilities.CanEditWorld) return false;
+
             // You are offline, it has to be your own computer.
             if (source == null) return true;
 

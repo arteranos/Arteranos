@@ -184,7 +184,7 @@ namespace Arteranos.UI
             HUDButtons[btn_callcd].Button.gameObject.SetActive(!cameraCalled);
             HUDButtons[btn_takephoto].Button.gameObject.SetActive(cameraCalled);
             HUDButtons[btn_dismisscd].Button.gameObject.SetActive(cameraCalled);
-            HUDButtons[btn_editworld].Button.gameObject.SetActive(G.World.World != null && G.World.World.CanEdit(G.UserData));
+            HUDButtons[btn_editworld].Button.gameObject.SetActive(Utils.IsAbleTo(UserCapabilities.CanEditWorld, null));
         }
 
         private void DownloadUserHUDSettings(UserHUDSettingsJSON obj)

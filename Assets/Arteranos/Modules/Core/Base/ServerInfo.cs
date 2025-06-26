@@ -22,6 +22,7 @@ namespace Arteranos.Core
 
         public MultiHash PeerID { get; private set; } = null;
 
+        [Obsolete("See #208")]
         public string CurrentWorldCid => OnlineData?.CurrentWorldCid;
         public string CurrentWorldName => OnlineData?.CurrentWorldName;
 

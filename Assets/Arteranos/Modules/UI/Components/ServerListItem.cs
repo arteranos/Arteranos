@@ -72,6 +72,7 @@ namespace Arteranos.UI
                 btn_VisitText.text = !si.IsOnline
                     ? "Try to\nvisit"
                     : "Visit";
+                // TODO Inactive if the world is restricted to client's user
                 btn_Visit.gameObject.SetActive(true); //  (si.IsOnline);
 
                 if (!si.IsOnline)

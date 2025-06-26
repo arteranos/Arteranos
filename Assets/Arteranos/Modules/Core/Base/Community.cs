@@ -79,6 +79,7 @@ namespace Arteranos.Core
             IEnumerable<(UserID friend, string fp)> friends = Enumerable.Empty<(UserID friend, string fp)>(); // TODO Stub
 
             // Intersect server's user list with the own friend list
+            // TODO #89, #208 -- exclude (not so much) friends hiding from you in restricted worlds? 
             return from entry in friends
                    where UsersHosts[peerID].Item1.Contains(entry.fp)
                    select entry.friend;

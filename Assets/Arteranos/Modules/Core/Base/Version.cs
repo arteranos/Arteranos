@@ -13,7 +13,7 @@ namespace Arteranos.Core
 {
     public class Version
     {
-        public const string VERSION_MIN = "3.1.0";
+        public const string VERSION_MIN = "3.2.0";
 
         public static readonly Version MinVersion = Parse(VERSION_MIN);
 

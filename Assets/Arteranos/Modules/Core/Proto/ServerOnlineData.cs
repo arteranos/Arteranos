@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Arteranos.Common.Cryptography;
 using Arteranos.Services;
 using ProtoBuf;
 
@@ -27,7 +28,7 @@ namespace Arteranos.Core
         public string ServerDescriptionCid; // Just in case if we don't have the SD at all.
 
         [ProtoMember(4)]
-        public List<byte[]> UserFingerprints = new();
+        public List<Fingerprint> UserFingerprints = new();
 
         [ProtoMember(5)]
         public OnlineLevel OnlineLevel;

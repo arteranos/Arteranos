@@ -370,8 +370,8 @@ namespace Arteranos.Services
                 int result = t.Result;
                 if (result < 2)
                 {
-                    Debug.Log($"No other peers detected, discovery timeout shortened");
-                    timeout = 5;
+                    // Debug.Log($"No other peers detected, discovery timeout shortened");
+                    timeout = 10;
                 }
 
                 yield return new WaitForSeconds(timeout); // 5 minutes before searching again
@@ -489,9 +489,9 @@ namespace Arteranos.Services
                     continue;
                 }
 
-                List<byte[]> UserFingerprints = (from user in G.NetworkStatus.GetOnlineUsers()
+                List<Fingerprint> UserFingerprints = (from user in G.NetworkStatus.GetOnlineUsers()
                                                  where user.UserPrivacy != null && user.UserPrivacy.Visibility != Visibility.Invisible
-                                                 select user.UserID.Fingerprint).ToList();
+                                                 select new Fingerprint(user.UserID)).ToList();
 
                 List<string> addrstrs = (from entry in addrs
                                          where entry != null
@@ -666,9 +666,9 @@ namespace Arteranos.Services
                     }
                     else
                     {
-                        HashSet<string> usersFP = new();
-                        foreach (byte[] entry in sod.UserFingerprints)
-                            usersFP.Add(HexString.Encode(entry));
+                        HashSet<Fingerprint> usersFP = new();
+                        foreach (Fingerprint entry in sod.UserFingerprints)
+                            usersFP.Add(entry);
                         G.Community.UpdateServerWorld(SenderPeerID, sod.CurrentWorldCid);
                         G.Community.UpdateServerUsers(SenderPeerID, usersFP, sod.Timestamp);
                     }

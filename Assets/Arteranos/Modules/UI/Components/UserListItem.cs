@@ -82,7 +82,7 @@ namespace Arteranos.UI
             StringBuilder sb = new();
             sb.Append((string)TargetUserID);
 
-            (MultiHash server, Cid world) = G.Community.FindFriend(HexString.Encode(TargetUserID.Fingerprint));
+            (MultiHash server, Cid world) = G.Community.FindFriend(TargetUserID);
             if (server != null && LocationVisible)
             {
                 ServerInfo si = new(server);

@@ -5,18 +5,12 @@
  * residing in the LICENSE.md file in the project's root directory.
  */
 
-using Arteranos.WorldEdit;
 using Ipfs;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Linq;
-using UnityEngine;
 using Arteranos.Common;
+using Arteranos.Common.Cryptography;
 
 
 namespace Arteranos.Core
@@ -24,11 +18,11 @@ namespace Arteranos.Core
 
     public class Community
     {
-        private readonly Dictionary<MultiHash, (HashSet<string>, DateTime) > UsersHosts = new();
+        private readonly Dictionary<MultiHash, (HashSet<Fingerprint>, DateTime) > UsersHosts = new();
 
         private readonly Dictionary<MultiHash, Cid> WorldHosts = new();
 
-        public void UpdateServerUsers(MultiHash peerID, HashSet<string> userFPs, DateTime stamp)
+        public void UpdateServerUsers(MultiHash peerID, HashSet<Fingerprint> userFPs, DateTime stamp)
             => UsersHosts[peerID] = (userFPs, stamp);
 
         public void UpdateServerWorld(MultiHash peerID, Cid worldID)
@@ -47,18 +41,21 @@ namespace Arteranos.Core
                     select entry.Key;
         }
 
-        public (MultiHash server, Cid world) FindFriend(string friendFP)
+        public (MultiHash server, Cid world) FindFriend(UserID friend)
+            => FindFriend(new Fingerprint(friend));
+
+        public (MultiHash server, Cid world) FindFriend(Fingerprint friendFP)
         {
             // Lazy server still lists your friend who just switched servers
             IEnumerable<(MultiHash peer, DateTime time)> q = from entry in UsersHosts
-                   where entry.Value.Item1.Contains(friendFP)
-                   select (entry.Key, entry.Value.Item2);
+                                                             where entry.Value.Item1.Contains(friendFP)
+                                                             select (entry.Key, entry.Value.Item2);
 
             // Most recent online data would be the winner
             MultiHash found = null;
             DateTime foundTime = DateTime.MinValue;
             foreach ((MultiHash peer, DateTime time) in q)
-                if(time > foundTime)
+                if (time > foundTime)
                 {
                     found = peer;
                     foundTime = time;
@@ -72,17 +69,25 @@ namespace Arteranos.Core
         public IEnumerable<UserID> FindFriends(MultiHash peerID)
         {
             // None at all. Server is offline.
-            if(!UsersHosts.ContainsKey(peerID))
-                return Enumerable.Empty<UserID>();
+            if (!UsersHosts.ContainsKey(peerID)) yield break;
 
-            // All of the friends
-            IEnumerable<(UserID friend, string fp)> friends = Enumerable.Empty<(UserID friend, string fp)>(); // TODO Stub
+            (HashSet<Fingerprint> fps, DateTime dt) = UsersHosts[peerID];
 
-            // Intersect server's user list with the own friend list
-            // TODO #89, #208 -- exclude (not so much) friends hiding from you in restricted worlds? 
-            return from entry in friends
-                   where UsersHosts[peerID].Item1.Contains(entry.fp)
-                   select entry.friend;
+            foreach ((UserID target, bool friendOffered, bool friendReceived, bool blockImposed) in G.UserData.GetAllStates())
+            {
+                // Yikes!
+                if (blockImposed) continue;
+
+                // Not a true friend
+                if (!friendOffered || !friendReceived) continue;
+
+                // Not In this server
+                if (!fps.Contains(new Fingerprint(target))) continue;
+
+                // Intersect server's user list with the own friend list
+                // TODO #89, #208 -- exclude (not so much) friends hiding from you in restricted worlds? 
+                yield return target;
+            }
         }
     }
 }

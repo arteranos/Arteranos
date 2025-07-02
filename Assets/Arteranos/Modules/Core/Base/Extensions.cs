@@ -12,7 +12,7 @@ using System;
 
 namespace Arteranos.Core
 {
-    public static class Extensions
+    public static partial class Extensions
     {
         /// <summary>
         /// Finds the transform in the hierarchy tree by name, including searching the

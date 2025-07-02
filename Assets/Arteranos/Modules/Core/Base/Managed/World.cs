@@ -35,6 +35,8 @@ namespace Arteranos.Core.Managed
             DecorationCid = new(async () => (await GetWorldLinks()).decoration);
             WorldInfo = new(async () => await GetWorldInfo());
             TemplateInfo = new(async () => await GetTemplateInfo());
+
+            ScreenshotCid = new(async () => await GetActiveScreenshotCid());
             ScreenshotPNG = new(async () => await GetActiveScreenshot());
 
             TemplateContent = new(async () => await GetAssetBundle());
@@ -62,6 +64,11 @@ namespace Arteranos.Core.Managed
         /// The template's info.
         /// </summary>
         public readonly AsyncLazy<WorldInfo> TemplateInfo;
+
+        /// <summary>
+        /// The screenshot CID
+        /// </summary>
+        public readonly AsyncLazy<Cid> ScreenshotCid;
 
         /// <summary>
         /// The screemshot PNG
@@ -140,9 +147,17 @@ namespace Arteranos.Core.Managed
         }
 
         private async Task<byte[]> GetActiveScreenshot()
-        {           
+        {
+            Cid scrCid = await ScreenshotCid;
+
             using CancellationTokenSource cts = new(4000);
-            return await G.IPFSService.ReadBinary($"{RootCid}/Screenshot.png", cancel: cts.Token);
+            return await G.IPFSService.ReadBinary(scrCid, cancel: cts.Token);
+        }
+
+        private async Task<Cid> GetActiveScreenshotCid()
+        {
+            using CancellationTokenSource cts = new(4000);
+            return await G.IPFSService.ResolveToCid($"{RootCid}/Screenshot.png", cancel: cts.Token);
         }
 
         private async Task<WorldInfo> GetTemplateInfo()
@@ -151,13 +166,13 @@ namespace Arteranos.Core.Managed
 
             using CancellationTokenSource cts = new(4000);
             byte[] data = await G.IPFSService.ReadBinary($"{targeted}/Metadata.json", cancel: cts.Token);
-            string json = Encoding.UTF8.GetString( data );
+            string json = Encoding.UTF8.GetString(data);
 
             WorldMetaData metaData = WorldMetaData.Deserialize(json);
 
             WorldInfo win = new()
             {
-                WorldCid = (Cid) TemplateCid,
+                WorldCid = (Cid)TemplateCid,
                 WorldName = metaData.WorldName,
                 WorldDescription = metaData.WorldDescription,
                 Author = metaData.AuthorID,

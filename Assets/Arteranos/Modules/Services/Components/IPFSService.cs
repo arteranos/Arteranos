@@ -497,17 +497,29 @@ namespace Arteranos.Services
                                          where entry != null
                                          select entry.ToString()).ToList();
 
+                bool online = ol != OnlineLevel.Offline;
+
+                PublicWorldData publicWorldData;
+                if (online && G.World?.World != null)
+                {
+                    yield return G.World.World.ScreenshotCid.WaitFor();
+
+                    publicWorldData = G.World.World.PublicData();
+                }
+                else publicWorldData = PublicWorldData.OfflineWorld();
+
                 ServerOnlineData sod = new()
                 {
-                    CurrentWorldCid = ol != OnlineLevel.Offline ? G.World.Cid : null,
-                    CurrentWorldName = ol != OnlineLevel.Offline ? G.World.Name : "Offline",
-                    UserFingerprints = ol != OnlineLevel.Offline ? UserFingerprints : null,
+                    CurrentWorldCid = online ? G.World.Cid : null,
+                    CurrentWorldName = online ? G.World.Name : "Offline",
+                    UserFingerprints = online ? UserFingerprints : null,
                     ServerDescriptionCid = CurrentSDCid,
                     // LastOnline = last, // Not serialized - set on receive
                     OnlineLevel = ol,
                     IPAddresses = addrstrs,
                     Timestamp = DateTime.UtcNow,
-                    Firewalled = G.NetworkStatus.GetConnectivityLevel() != ConnectivityLevel.Unrestricted
+                    Firewalled = G.NetworkStatus.GetConnectivityLevel() != ConnectivityLevel.Unrestricted,
+                    PublicWorldData = publicWorldData
                 };
 
                 using MemoryStream ms = new();

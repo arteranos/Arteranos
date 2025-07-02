@@ -42,7 +42,8 @@ namespace Arteranos.Core
 
         [ProtoMember(10)]
         public string PrivacyTOSNotice;
-
+        
+        [Obsolete("#208 - extend to UserID")]
         [ProtoMember(11)]
         public string[] AdminNames;
 

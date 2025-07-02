@@ -117,15 +117,15 @@ namespace Arteranos.Services
         {
             byte[] challengeBytes = new byte[numBytes];
 
-            for(int i = 0; i < challengeBytes.Length; i++)
-                challengeBytes[i] = (byte) Random.Range(0, 255);
+            for (int i = 0; i < challengeBytes.Length; i++)
+                challengeBytes[i] = (byte)Random.Range(0, 255);
 
             return challengeBytes;
         }
 
         private void Update()
         {
-            if(!ResponseQueue.TryDequeue(out ResponseQueueEntry e)) return;
+            if (!ResponseQueue.TryDequeue(out ResponseQueueEntry e)) return;
 
             EmitAuthResponse(e);
         }
@@ -187,7 +187,7 @@ namespace Arteranos.Services
         // Every two seconds, look for the outdated login attempts to remove them.
         private IEnumerator ScrubChallenges()
         {
-            while(true)
+            while (true)
             {
                 yield return new WaitForSeconds(2);
 
@@ -197,7 +197,7 @@ namespace Arteranos.Services
                                  where entry.Value.time < now
                                  select entry.Key).ToArray();
 
-                foreach(int number in numbers)
+                foreach (int number in numbers)
                     ChallengeList.Remove(number);
             }
         }
@@ -206,18 +206,18 @@ namespace Arteranos.Services
         /// Called on server from OnServerConnectInternal when a client needs to authenticate
         /// </summary>
         /// <param name="conn">Connection to client.</param>
-        public override void OnServerAuthenticate(NetworkConnectionToClient conn) 
+        public override void OnServerAuthenticate(NetworkConnectionToClient conn)
         {
             // Flooded. Too many login attempts at the same time.
-            if(ChallengeList.Count > 12000)
+            if (ChallengeList.Count > 12000)
             {
                 Debug.LogWarning($"Login attempt flood: Discarding connection from {conn.address}");
                 // conn.Disconnect();
                 return;
             }
-                
+
             int sequence = Random.Range(0, 1000000);
-            while(ChallengeList.TryGetValue(sequence, out _))
+            while (ChallengeList.TryGetValue(sequence, out _))
                 sequence = Random.Range(0, 1000000);
 
             // Allow sixty seconds between the greeting message and the client's reaction.
@@ -255,7 +255,7 @@ namespace Arteranos.Services
                 {
                     DecideAuthenthicity(conn, msg);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Debug.LogException(e);
                     ServerReject(conn);
@@ -274,7 +274,7 @@ namespace Arteranos.Services
             try
             {
                 Server.ReceiveMessage(encryptedMsg.Payload, out byte[] payloadBlob, out PublicKey signerPublicKey);
-                
+
                 using MemoryStream ms = new(payloadBlob);
                 request = Serializer.Deserialize<AuthRequestPayload>(ms);
 
@@ -316,7 +316,7 @@ namespace Arteranos.Services
                     message = $"Request timed out",
                 };
             }
-            else if(response.status == 0)
+            else if (response.status == 0)
             {
                 // All checks pan out.
                 response = new()
@@ -331,8 +331,21 @@ namespace Arteranos.Services
 
                 UserID userID = new(request.ClientSignPublicKey, request.Nickname, request.UserIconCid);
 
-                if (G.World.World != null && !G.World.World.CanView(userID))
+                if (G.World.World == null)
                 {
+                    // Server has no world loaded
+                    IEnumerable<UserID> admins = from entry in G.ServerUsers.Base
+                                                 where UserState.IsSAdmin(entry.userState)
+                                                 select entry.userID;
+                    if (!admins.Contains(userID))
+                    {
+                        response.status = HttpStatusCode.Forbidden;
+                        response.message = "Loading a new world requires an admin of this server.";
+                    }
+                }
+                else if (!G.World.World.CanView(userID))
+                {
+                    // World is loaded, refer to the world's ACL
                     response.status = HttpStatusCode.Forbidden;
                     response.message = "This server's world is not viewable for you.";
                 }
@@ -355,7 +368,7 @@ namespace Arteranos.Services
                 // and a server administrator as his origin as the server.... perfectly valid.
                 //
                 // But, banned means revoking all of the privileges, of course.
-                if(UserState.IsBanned(aggregated))
+                if (UserState.IsBanned(aggregated))
                 {
                     aggregated &= ~UserState.GOOD_MASK;
 
@@ -398,10 +411,10 @@ namespace Arteranos.Services
             bool accepted = e.response.status == HttpStatusCode.OK;
 
             Debug.Log($"{(accepted ? "Accept" : "Reject")}ed connection from {e.conn.address}");
-            if(!accepted)
+            if (!accepted)
                 Debug.Log($"  Reason: {e.response.status}, Message:\n{e.response.message}");
 
-            if(accepted)
+            if (accepted)
             {
                 ArteranosNetworkManager.AuthSequence seq = new()
                 {
@@ -453,7 +466,7 @@ namespace Arteranos.Services
 
             byte[] pubKeyData = msg.ServerSignPublicKey.Serialize();
 
-            if(!cs.ServerPasses.TryGetValue(key, out ServerPass sp))
+            if (!cs.ServerPasses.TryGetValue(key, out ServerPass sp))
             {
                 // New server encountered. Yay!
                 cs.ServerPasses.Add(key, new()
@@ -465,7 +478,7 @@ namespace Arteranos.Services
                 cs.Save();
                 return;
             }
-            else if(sp.ServerPublicKey == null)
+            else if (sp.ServerPublicKey == null)
             {
                 // Somewhat known, because we dealt with the custom TOS, and never connected to it yet.
                 sp.ServerPublicKey = pubKeyData;
@@ -474,7 +487,7 @@ namespace Arteranos.Services
                 cs.Save();
                 return;
             }
-            else if(pubKeyData.SequenceEqual(sp.ServerPublicKey))
+            else if (pubKeyData.SequenceEqual(sp.ServerPublicKey))
             {
                 // Known server, everything is okay.
                 SubmitAuthRequest(msg);
@@ -490,7 +503,7 @@ namespace Arteranos.Services
                     "It's possible that someone is doing\n" +
                     "something very nasty!\n\n" +
                     "Or, the server's adminitrator being\n" +
-                    "careless about his machine.\n\n"+
+                    "careless about his machine.\n\n" +
                     "Only accept it if you're really,\n" +
                     "absolutely positive, sure about it!\n\n";
 
@@ -506,7 +519,7 @@ namespace Arteranos.Services
 
         private void OnHostKeyChangedResponse(int rc, AuthGreetingMessage msg)
         {
-            if(rc == 0)
+            if (rc == 0)
             {
                 ClientReject();
                 return;
@@ -535,9 +548,9 @@ namespace Arteranos.Services
             {
                 SequenceNumber = msg.SequenceNumber,
 
-                Nickname = (string) G.UserData,
+                Nickname = (string)G.UserData,
                 ClientSignPublicKey = G.UserData,
-                UserIconCid = (Cid) G.UserData,
+                UserIconCid = (Cid)G.UserData,
                 deviceUID = SystemInfo.deviceUniqueIdentifier,
                 ClientAgreePublicKey = cs.UserAgrPublicKey
             };

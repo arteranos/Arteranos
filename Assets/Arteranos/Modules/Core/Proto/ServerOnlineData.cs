@@ -21,6 +21,7 @@ namespace Arteranos.Core
         [ProtoMember(1)]
         public string CurrentWorldCid;
 
+        [Obsolete("See #208")]
         [ProtoMember(2)]
         public string CurrentWorldName;
 
@@ -44,6 +45,9 @@ namespace Arteranos.Core
 
         [ProtoMember(9)]
         public bool Firewalled;
+
+        [ProtoMember(10)]
+        public PublicWorldData PublicWorldData;
 
         public override void Serialize(Stream stream)
             => Serializer.Serialize(stream, this);

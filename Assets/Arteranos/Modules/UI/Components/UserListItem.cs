@@ -13,6 +13,7 @@ using TMPro;
 using Ipfs;
 using System.Text;
 using Arteranos.Common;
+using Arteranos.Common.Cryptography;
 
 namespace Arteranos.UI
 {
@@ -82,7 +83,7 @@ namespace Arteranos.UI
             StringBuilder sb = new();
             sb.Append((string)TargetUserID);
 
-            (MultiHash server, Cid world) = G.Community.FindFriend(TargetUserID);
+            (MultiHash server, Fingerprint worldFP) = G.Community.FindFriend(TargetUserID);
             if (server != null && LocationVisible)
             {
                 ServerInfo si = new(server);
@@ -90,7 +91,7 @@ namespace Arteranos.UI
                 string worldname = si.CurrentWorldName ?? "Unknown world";
                 sb.Append($"\n{servername}");
 
-                if (world != null)
+                if (worldFP != (Fingerprint) null)
                 {
                     sb.Append($" ({worldname})");
                 }

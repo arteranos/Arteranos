@@ -510,8 +510,6 @@ namespace Arteranos.Services
 
                 ServerOnlineData sod = new()
                 {
-                    CurrentWorldCid = online ? G.World.Cid : null,
-                    CurrentWorldName = online ? G.World.Name : "Offline",
                     UserFingerprints = online ? UserFingerprints : null,
                     ServerDescriptionCid = CurrentSDCid,
                     // LastOnline = last, // Not serialized - set on receive
@@ -647,8 +645,10 @@ namespace Arteranos.Services
         {
             MultiHash SenderPeerID = message.Sender.Id;
 
+#if !DEBUG
             // Pubsub MAY loop back the messages, but no need.
             if (SenderPeerID == self.Id) return;
+#endif
 
             try
             {
@@ -672,7 +672,7 @@ namespace Arteranos.Services
                     sod.LastOnline = DateTime.UtcNow; // Not serialized
                     sod.DBInsert(SenderPeerID.ToString());
 
-                    if (sod.CurrentWorldCid == null && sod.UserFingerprints == null)
+                    if (sod.PublicWorldData.WorldFP == (Fingerprint) null && sod.UserFingerprints == null)
                     {
                         G.Community.DownServer(SenderPeerID);
                     }
@@ -681,7 +681,7 @@ namespace Arteranos.Services
                         HashSet<Fingerprint> usersFP = new();
                         foreach (Fingerprint entry in sod.UserFingerprints)
                             usersFP.Add(entry);
-                        G.Community.UpdateServerWorld(SenderPeerID, sod.CurrentWorldCid);
+                        G.Community.UpdateServerWorld(SenderPeerID, sod.PublicWorldData.WorldFP);
                         G.Community.UpdateServerUsers(SenderPeerID, usersFP, sod.Timestamp);
                     }
                 }

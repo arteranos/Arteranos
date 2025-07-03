@@ -27,6 +27,7 @@ namespace Arteranos.UI
         public IPFSImage img_Screenshot = null;
         public TMP_Text lbl_Caption = null;
 
+        [Obsolete("May be null - World's CID is unknown because it's reported by remote servers")]
         public World World { get; internal set; } = null;
         public int ServersCount { get; internal set; } = 0;
         public int UsersCount { get; internal set; } = 0;

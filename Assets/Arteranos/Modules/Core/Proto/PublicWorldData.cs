@@ -29,7 +29,7 @@ namespace Arteranos.Core
         public string ScreenshotCid;
 
         [ProtoMember(4)]
-        public Fingerprint WorldCid;
+        public Fingerprint WorldFP;
 
         [ProtoMember(5)]
         public PermissionsJSON Permissions;
@@ -72,7 +72,7 @@ namespace Arteranos.Core
                 Name = "Somewhere",
                 Creator = null,
                 ScreenshotCid = null,
-                WorldCid = null,
+                WorldFP = null,
                 Permissions = null,
                 DefaultAccess = WorldAccessInfoLevel.Nothing,
                 DeniedUsers = new(),
@@ -133,7 +133,7 @@ namespace Arteranos.Core
                 Name = wi.WorldName,
                 Creator = wi.Author,
                 ScreenshotCid = (Cid)world.ScreenshotCid,
-                WorldCid = new Fingerprint(world.RootCid),
+                WorldFP = new Fingerprint(world.RootCid),
                 Permissions = wi.ContentRating,
                 DefaultAccess = defaultLevel,
                 DeniedUsers = deniedUsers.ToList(),

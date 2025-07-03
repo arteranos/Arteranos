@@ -22,9 +22,10 @@ namespace Arteranos.Core
 
         public MultiHash PeerID { get; private set; } = null;
 
-        [Obsolete("See #208")]
-        public string CurrentWorldCid => OnlineData?.CurrentWorldCid;
-        public string CurrentWorldName => OnlineData?.CurrentWorldName;
+        [Obsolete("See #208 - use CurrentWorldFP")]
+        public string CurrentWorldCid => null;  // OnlineData?.CurrentWorldCid;
+        public string CurrentWorldName => OnlineData?.PublicWorldData.Name;
+        public Fingerprint CurrentWorldFP => OnlineData?.PublicWorldData.WorldFP;
 
         private ServerInfo()
         {

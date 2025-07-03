@@ -20,13 +20,13 @@ namespace Arteranos.Core
     {
         private readonly Dictionary<MultiHash, (HashSet<Fingerprint>, DateTime) > UsersHosts = new();
 
-        private readonly Dictionary<MultiHash, Cid> WorldHosts = new();
+        private readonly Dictionary<MultiHash, Fingerprint> WorldHosts = new();
 
         public void UpdateServerUsers(MultiHash peerID, HashSet<Fingerprint> userFPs, DateTime stamp)
             => UsersHosts[peerID] = (userFPs, stamp);
 
-        public void UpdateServerWorld(MultiHash peerID, Cid worldID)
-            => WorldHosts[peerID] = worldID;
+        public void UpdateServerWorld(MultiHash peerID, Fingerprint worldFP)
+            => WorldHosts[peerID] = worldFP;
 
         public void DownServer(MultiHash peerID)
         {
@@ -34,17 +34,17 @@ namespace Arteranos.Core
             WorldHosts.Remove(peerID);
         }
         
-        public IEnumerable<MultiHash> FindServersHostingWorld(Cid world)
+        public IEnumerable<MultiHash> FindServersHostingWorld(Fingerprint world)
         {
             return from entry in WorldHosts
                     where entry.Value == world
                     select entry.Key;
         }
 
-        public (MultiHash server, Cid world) FindFriend(UserID friend)
+        public (MultiHash server, Fingerprint worldFP) FindFriend(UserID friend)
             => FindFriend(new Fingerprint(friend));
 
-        public (MultiHash server, Cid world) FindFriend(Fingerprint friendFP)
+        public (MultiHash server, Fingerprint worldFP) FindFriend(Fingerprint friendFP)
         {
             // Lazy server still lists your friend who just switched servers
             IEnumerable<(MultiHash peer, DateTime time)> q = from entry in UsersHosts

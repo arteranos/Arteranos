@@ -15,6 +15,7 @@ using Ipfs;
 using Arteranos.Core.Operations;
 using System.Collections.Concurrent;
 using Arteranos.Core.Managed;
+using Arteranos.Common.Cryptography;
 
 namespace Arteranos.UI
 {
@@ -33,8 +34,8 @@ namespace Arteranos.UI
         public ObjectChooser Chooser;
         public FileBrowser FileBrowser;
 
-        private readonly ConcurrentDictionary<Cid, Collection> worldlist = new();
-        private readonly List<Cid> sortedWorldList = new();
+        private readonly ConcurrentDictionary<Fingerprint, Collection> worldlist = new();
+        private readonly List<Fingerprint> sortedWorldList = new();
         private Mutex DictMutex = null;
 
         protected override void Awake()
@@ -100,13 +101,13 @@ namespace Arteranos.UI
         {
             if (!@object.TryGetComponent(out WorldPaneltem wli)) return;
 
-            Cid WorldCid = sortedWorldList[i];
-            wli.World = WorldCid;
+            Fingerprint WorldCid = sortedWorldList[i];
             if (worldlist.TryGetValue(WorldCid, out Collection list))
             {
                 wli.ServersCount = list.serversCount;
                 wli.UsersCount = list.usersCount;
                 wli.FriendsMax = list.friendsMax;
+                wli.World = list.worldCid;
             }
         }
 
@@ -148,19 +149,18 @@ namespace Arteranos.UI
         {
             foreach(ServerInfo si in ServerInfo.Dump())
             {
-                if(si.CurrentWorldCid == null) continue;
+                if(si.CurrentWorldFP == (Fingerprint) null) continue;
 
                 // Looking for the server where you meet up with most of your friends;
                 // sorry about for outliers.
                 int friendCount = si.FriendCount;
-                worldlist.AddOrUpdate(si.CurrentWorldCid, new Collection()
+                worldlist.AddOrUpdate(si.CurrentWorldFP, new Collection()
                 {
                     favourited = false,
                     current = false,
                     friendsMax = friendCount,
                     serversCount = 1,
-                    usersCount = si.UserCount,
-                    worldCid = si.CurrentWorldCid
+                    usersCount = si.UserCount
                 },
                 (cid, coll) =>
                 {
@@ -188,7 +188,7 @@ namespace Arteranos.UI
 
         private IEnumerator AddManualWorldCoroutine(Cid WorldCid, bool? favourited, bool? current)
         {
-            worldlist.AddOrUpdate(WorldCid, new Collection()
+            worldlist.AddOrUpdate(new Fingerprint(WorldCid), new Collection()
             {
                 favourited = favourited ?? true,
                 current = current ?? false,
@@ -201,6 +201,7 @@ namespace Arteranos.UI
             {
                 coll.favourited = favourited ?? coll.favourited;
                 coll.current = current ?? coll.current;
+                coll.worldCid = WorldCid; // We may have got the world by its fingerprint, and we got its CID now.
                 return coll;
             });
 
@@ -210,7 +211,7 @@ namespace Arteranos.UI
         private void CreateSortedWorldList()
         {
             sortedWorldList.Clear();
-            foreach(KeyValuePair<Cid, Collection> item in worldlist)
+            foreach(KeyValuePair<Fingerprint, Collection> item in worldlist)
             {
                 // It's nowhere hosted and unfavourited, so leave out the dross
                 if (ScoreWorld(item.Key) <= 0) continue;
@@ -221,7 +222,7 @@ namespace Arteranos.UI
             sortedWorldList.Sort((x, y) => ScoreWorld(y) - ScoreWorld(x));
         }
 
-        private int ScoreWorld(Cid cid) 
+        private int ScoreWorld(Fingerprint cid) 
         {
             if(!worldlist.TryGetValue(cid, out Collection list)) return -10000;
 

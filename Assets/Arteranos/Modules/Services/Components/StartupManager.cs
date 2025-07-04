@@ -8,6 +8,7 @@
 using Arteranos.Avatar;
 using Arteranos.Common;
 using Arteranos.Core;
+using Arteranos.Core.Managed;
 using Arteranos.Core.Operations;
 using System;
 using System.Collections;
@@ -50,7 +51,14 @@ namespace Arteranos.Services
             yield return new WaitUntil(() => G.IPFSService.Ready);
 
             if (G.CommandLineOptions.DesiredWorldCid != null)
-                ServerSearcher.InitiateServerTransition(G.CommandLineOptions.DesiredWorldCid);
+            {
+                World world = G.CommandLineOptions.DesiredWorldCid;
+                yield return world.WorldInfo.WaitFor();
+                yield return world.ScreenshotCid.WaitFor();
+                PublicWorldData publicWorldData = world.PublicData();
+
+                ServerSearcher.InitiateServerTransition(publicWorldData);
+            }
             else if (G.CommandLineOptions.DesiredPeerID != null)
                 yield return G.ConnectionManager.ConnectToServer(G.CommandLineOptions.DesiredPeerID, null);
             else

@@ -25,8 +25,7 @@ namespace Arteranos.Core.Operations
     internal class ServerSearcherContext : Context
     {
         public List<ServerInfo> serverInfos = null;
-        public Cid desiredWorldCid = null;
-        public PermissionsJSON desiredWorldPermissions = null;
+        public PublicWorldData wantedWorld = default;
         public MultiHash resultPeerID = null;
     }
 

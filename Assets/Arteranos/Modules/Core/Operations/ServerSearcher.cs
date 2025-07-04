@@ -27,15 +27,9 @@ namespace Arteranos.Core.Operations
 
         public Task<Context> ExecuteAsync(Context _context, CancellationToken token)
         {
-            return Task.Run(async () =>
+            return Task.Run(() =>
             {
                 ServerSearcherContext context = _context as ServerSearcherContext;
-
-                World world = context.desiredWorldCid;
-
-                WorldInfo info = await world.WorldInfo;
-
-                context.desiredWorldPermissions = info?.ContentRating;
 
                 return context as Context;
             });
@@ -88,9 +82,9 @@ namespace Arteranos.Core.Operations
                     xScore = -20000;
                 else if (!x.IsOnline)
                     xScore = -20000;
-                else if (context.desiredWorldPermissions != null && context.desiredWorldPermissions.IsInViolation(x.Permissions))
+                else if (context.wantedWorld.Permissions != null && context.wantedWorld.Permissions.IsInViolation(x.Permissions))
                     xScore = -10000;
-                else if (context.desiredWorldCid != null && x.CurrentWorldCid != context.desiredWorldCid)
+                else if (x.PublicWorldData.Value.WorldFP != context.wantedWorld.WorldFP)
                     xScore = -10000;
 
                 return xScore;
@@ -124,14 +118,13 @@ namespace Arteranos.Core.Operations
 
     }
 
-    [Obsolete("Need transition to world fingerprint mapping")]
     public static class ServerSearcher
     {
-        public static (AsyncOperationExecutor<Context>, Context) PrepareSearchServers(string desiredWorld)
+        public static (AsyncOperationExecutor<Context>, Context) PrepareSearchServers(PublicWorldData wantedWorld)
         {
             ServerSearcherContext context = new()
             {
-                desiredWorldCid = desiredWorld
+                wantedWorld = wantedWorld
             };
 
             AsyncOperationExecutor<Context> executor = new(new IAsyncOperation<Context>[]
@@ -144,49 +137,35 @@ namespace Arteranos.Core.Operations
             return (executor, context);
         }
 
-        public static void InitiateServerTransition(Cid WorldCid)
+        public static void InitiateServerTransition(PublicWorldData WantedWorld)
         {
-            static IEnumerator Cor(Cid WorldCid, MultiHash ServerPeerID)
+            static IEnumerator Cor(MultiHash ServerPeerID)
             {
-                _ = OnGotSearchResult(WorldCid, ServerPeerID);
+                OnGotSearchResult(ServerPeerID);
 
                 yield return null;
             }
 
-            static void GotResult(Cid WorldCid, MultiHash ServerPeerID)
+            static void GotResult(PublicWorldData WorldCid, MultiHash ServerPeerID)
             {
-                TaskScheduler.ScheduleCoroutine(() => Cor(WorldCid, ServerPeerID));
+                TaskScheduler.ScheduleCoroutine(() => Cor(ServerPeerID));
             }
 
-            InitiateServerTransition(WorldCid, GotResult, null);
+            InitiateServerTransition(WantedWorld, GotResult, null);
         }
 
-        public static void InitiateServerTransition(Cid WorldCid, Action<Cid, MultiHash> OnSuccessCallback, Action OnFailureCallback)
+        public static void InitiateServerTransition(PublicWorldData WantedWorld, Action<PublicWorldData, MultiHash> OnSuccessCallback, Action OnFailureCallback)
         {
             IProgressUI pui = Factory.NewProgress();
 
-            pui.SetupAsyncOperations(() => PrepareSearchServers(WorldCid));
+            pui.SetupAsyncOperations(() => PrepareSearchServers(WantedWorld));
 
-            pui.Completed += context => OnSuccessCallback(WorldCid, (context as ServerSearcherContext).resultPeerID);
+            pui.Completed += context => OnSuccessCallback(WantedWorld, (context as ServerSearcherContext).resultPeerID);
             pui.Faulted += (ex, context) => OnFailureCallback();
         }
 
-        private static async Task OnGotSearchResult(Cid WorldCid, MultiHash ServerPeerID)
+        private static void OnGotSearchResult(MultiHash ServerPeerID)
         {
-            // No matching server, initiate Start Host with loading the world on entering
-            if (!string.IsNullOrEmpty(WorldCid) && ServerPeerID == null)
-            {
-                // It's time to part ways...
-                if (G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Client)
-                    await G.NetworkStatus.StopHost(true);
-
-                SettingsManager.EnterWorld(WorldCid);
-
-                // If we haven't a server (or, just left one), start up.
-                if (G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Offline)
-                    await G.NetworkStatus.StartHost();
-            }
-
             // No matching server, leave it be
             if (ServerPeerID == null) return;
 

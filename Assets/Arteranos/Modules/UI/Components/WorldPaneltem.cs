@@ -115,7 +115,10 @@ namespace Arteranos.UI
 
             // If we're in Host mode, you're the admin of your own server, so we're able to
             // change the world. And you still have the great responsibility...
-            btn_Visit.gameObject.SetActive(G.NetworkStatus.GetOnlineLevel() != OnlineLevel.Host);
+            btn_Visit.gameObject.SetActive(
+                G.NetworkStatus.GetOnlineLevel() != OnlineLevel.Host                    // We're in anything but Host mode
+                && ServersCount > 0                                                     // We got at least one server to connect to
+            );
 
             // We want to change the world, both on server or locally.
             btn_ChangeWorld.gameObject.SetActive(
@@ -150,7 +153,7 @@ namespace Arteranos.UI
             else
             {
                 // Server will know the world assets and tell us about it when we log in.
-                ServerSearcher.InitiateServerTransition(World.RootCid);
+                ServerSearcher.InitiateServerTransition(PublicWorldData);
             }
 
             World?.UpdateLastSeen();

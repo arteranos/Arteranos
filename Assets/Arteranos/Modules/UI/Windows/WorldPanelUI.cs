@@ -27,6 +27,7 @@ namespace Arteranos.UI
         public int friendsMax;
         public bool favourited;
         public bool current;
+        public PublicWorldData PublicWorldData;
     }
 
     public class WorldPanelUI : ActionPage
@@ -101,13 +102,14 @@ namespace Arteranos.UI
         {
             if (!@object.TryGetComponent(out WorldPaneltem wli)) return;
 
-            Fingerprint WorldCid = sortedWorldList[i];
-            if (worldlist.TryGetValue(WorldCid, out Collection list))
+            Fingerprint WorldFP = sortedWorldList[i];
+            if (worldlist.TryGetValue(WorldFP, out Collection list))
             {
                 wli.ServersCount = list.serversCount;
                 wli.UsersCount = list.usersCount;
                 wli.FriendsMax = list.friendsMax;
                 wli.World = list.worldCid;
+                wli.PublicWorldData = list.PublicWorldData;
             }
         }
 
@@ -149,24 +151,30 @@ namespace Arteranos.UI
         {
             foreach(ServerInfo si in ServerInfo.Dump())
             {
-                if(si.CurrentWorldFP == (Fingerprint) null) continue;
+                PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
+
+                Fingerprint currentWorldFP = publicWorldData.WorldFP;
+
+                if (currentWorldFP == (Fingerprint)null) continue;
 
                 // Looking for the server where you meet up with most of your friends;
                 // sorry about for outliers.
                 int friendCount = si.FriendCount;
-                worldlist.AddOrUpdate(si.CurrentWorldFP, new Collection()
+                worldlist.AddOrUpdate(currentWorldFP, new Collection()
                 {
                     favourited = false,
                     current = false,
                     friendsMax = friendCount,
                     serversCount = 1,
-                    usersCount = si.UserCount
+                    usersCount = si.UserCount,
+                    PublicWorldData = publicWorldData
                 },
                 (cid, coll) =>
                 {
                     coll.friendsMax = friendCount > coll.friendsMax ? friendCount : coll.friendsMax;
                     coll.serversCount++;
                     coll.usersCount += si.UserCount;
+                    coll.PublicWorldData = publicWorldData;
                     return coll;
                 });
 
@@ -188,6 +196,11 @@ namespace Arteranos.UI
 
         private IEnumerator AddManualWorldCoroutine(Cid WorldCid, bool? favourited, bool? current)
         {
+            World world = WorldCid;
+            yield return world.WorldInfo.WaitFor();
+            yield return world.ScreenshotCid.WaitFor();
+            PublicWorldData publicWorldData = world.PublicData();
+
             worldlist.AddOrUpdate(new Fingerprint(WorldCid), new Collection()
             {
                 favourited = favourited ?? true,
@@ -195,13 +208,15 @@ namespace Arteranos.UI
                 friendsMax = 0,
                 serversCount = 0,
                 usersCount = 0,
-                worldCid = WorldCid
+                worldCid = WorldCid,
+                PublicWorldData = publicWorldData
             },
             (cid, coll) =>
             {
                 coll.favourited = favourited ?? coll.favourited;
                 coll.current = current ?? coll.current;
                 coll.worldCid = WorldCid; // We may have got the world by its fingerprint, and we got its CID now.
+                coll.PublicWorldData = publicWorldData;
                 return coll;
             });
 

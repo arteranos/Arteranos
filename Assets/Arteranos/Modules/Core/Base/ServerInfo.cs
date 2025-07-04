@@ -25,7 +25,7 @@ namespace Arteranos.Core
         [Obsolete("See #208 - use CurrentWorldFP")]
         public string CurrentWorldCid => null;  // OnlineData?.CurrentWorldCid;
         public string CurrentWorldName => OnlineData?.PublicWorldData.Name;
-        public Fingerprint CurrentWorldFP => OnlineData?.PublicWorldData.WorldFP;
+        public PublicWorldData? PublicWorldData => OnlineData?.PublicWorldData;
 
         private ServerInfo()
         {

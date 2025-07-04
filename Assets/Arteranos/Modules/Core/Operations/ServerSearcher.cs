@@ -124,6 +124,7 @@ namespace Arteranos.Core.Operations
 
     }
 
+    [Obsolete("Need transition to world fingerprint mapping")]
     public static class ServerSearcher
     {
         public static (AsyncOperationExecutor<Context>, Context) PrepareSearchServers(string desiredWorld)
@@ -176,20 +177,20 @@ namespace Arteranos.Core.Operations
             if (!string.IsNullOrEmpty(WorldCid) && ServerPeerID == null)
             {
                 // It's time to part ways...
-                if(G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Client)
+                if (G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Client)
                     await G.NetworkStatus.StopHost(true);
 
                 SettingsManager.EnterWorld(WorldCid);
 
                 // If we haven't a server (or, just left one), start up.
-                if(G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Offline)
+                if (G.NetworkStatus.GetOnlineLevel() == OnlineLevel.Offline)
                     await G.NetworkStatus.StartHost();
             }
 
             // No matching server, leave it be
             if (ServerPeerID == null) return;
 
-            if(G.IPFSService.Self.Id == ServerPeerID)
+            if (G.IPFSService.Self.Id == ServerPeerID)
             {
                 Debug.Log("...It's us! :O");
                 return;

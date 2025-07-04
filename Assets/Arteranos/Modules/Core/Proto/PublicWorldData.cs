@@ -85,6 +85,12 @@ namespace Arteranos.Core
 
     public static partial class Extensions
     {
+        /// <summary>
+        /// Extract the public data from the full meta data
+        /// <para><b>Important:</b> Ensure that WorldInfo and ScreenshotCid is loaded!</para>
+        /// </summary>
+        /// <param name="world"></param>
+        /// <returns></returns>
         public static PublicWorldData PublicData(this World world)
         {
             WorldInfo wi = (WorldInfo)world.WorldInfo;

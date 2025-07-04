@@ -14,6 +14,7 @@ using Arteranos.Services;
 using Arteranos.Core.Operations;
 using Arteranos.Core.Managed;
 using Arteranos.Common;
+using Arteranos.Common.Cryptography;
 
 namespace Arteranos.UI
 {
@@ -27,8 +28,8 @@ namespace Arteranos.UI
         public IPFSImage img_Screenshot = null;
         public TMP_Text lbl_Caption = null;
 
-        [Obsolete("May be null - World's CID is unknown because it's reported by remote servers")]
         public World World { get; internal set; } = null;
+        public PublicWorldData PublicWorldData { get; internal set; } = default;
         public int ServersCount { get; internal set; } = 0;
         public int UsersCount { get; internal set; } = 0;
         public int FriendsMax { get; internal set; } = 0;
@@ -67,31 +68,20 @@ namespace Arteranos.UI
         {
             IEnumerator Cor()
             {
-                yield return World.ScreenshotPNG.WaitFor();
-                yield return World.WorldInfo.WaitFor();
-
-                // Cid seems to be invalid, or expired, or unreachable.
-                if (World.WorldInfo == null)
-                {
-                    lbl_Caption.text = "(unavailable)";
-                    yield break;
-                }
-
-                if (!World.CanView(G.UserData))
+                if (!PublicWorldData.CanView(G.UserData))
                 {
                     Hidden = true;
                     lbl_Caption.text = "(not viewable)";
                     yield break;
                 }
 
-                WorldInfo worldInfo = World.WorldInfo;
-                PermissionsJSON permission = worldInfo.ContentRating;
+                PermissionsJSON permission = PublicWorldData.Permissions;
                 AllowedForThis = permission != null && !permission.IsInViolation(SettingsManager.ActiveServerData.Permissions);
 
                 VisualizeWorldData();
             }
 
-            if(World == null)
+            if(PublicWorldData.WorldFP == (Fingerprint) null)
             {
                 lbl_Caption.text = "(deleted)";
                 return;
@@ -102,47 +92,68 @@ namespace Arteranos.UI
 
         private void VisualizeWorldData()
         {
-            WorldInfo WorldInfo = World.WorldInfo;
+            bool deleteable;
+            bool addable;
+            string lvstr;
+
+            if (World != null)
+            {
+                // World CID is known, either it's favourited or we're in the current server
+                deleteable = World.IsFavourited;
+                addable = !deleteable && PublicWorldData.CanPin(G.UserData);
+                lvstr = (World.LastSeen == DateTime.MinValue)
+                    ? "Never"
+                    : World.LastSeen.ToShortDateString();
+            }
+            else
+            {
+                // World CID is unknown, we got just a hint from remote server
+                deleteable = false;
+                addable = false;
+                lvstr = "Unknown";
+            }
 
             // If we're in Host mode, you're the admin of your own server, so we're able to
             // change the world. And you still have the great responsibility...
             btn_Visit.gameObject.SetActive(G.NetworkStatus.GetOnlineLevel() != OnlineLevel.Host);
+
+            // We want to change the world, both on server or locally.
             btn_ChangeWorld.gameObject.SetActive(
-                Core.Utils.IsAbleTo(Core.UserCapabilities.CanInitiateWorldTransition, null)
-                && AllowedForThis
-                && !G.World.ChangeInProgress);
+                Core.Utils.IsAbleTo(UserCapabilities.CanInitiateWorldTransition, null)  // The user has the server's admin powers
+                && AllowedForThis                                                       // The world's content matches
+                && World != null                                                        // We have a hold on the world asset
+                && !G.World.ChangeInProgress                                            // ... and we're not in a transition.
+            );
 
-            bool pinnable = !World.IsFavourited && World.CanPin(G.UserData);
+            btn_Add.gameObject.SetActive(addable);
+            btn_Delete.gameObject.SetActive(deleteable);
 
-            btn_Add.gameObject.SetActive(pinnable);
-            btn_Delete.gameObject.SetActive(World.IsFavourited);
-
-            string lvstr = (World.LastSeen == DateTime.MinValue)
-                ? "Never"
-                : World.LastSeen.ToShortDateString();
 
             lbl_Caption.text = string.Format(patternCaption,
-                WorldInfo.WorldName,
+                PublicWorldData.Name,
                 lvstr,
                 ServersCount,
                 UsersCount,
                 FriendsMax);
 
-            if (World.ScreenshotPNG != null)
-                img_Screenshot.ImageData = World.ScreenshotPNG;
+            if (PublicWorldData.ScreenshotCid != null)
+                img_Screenshot.Path = PublicWorldData.ScreenshotCid;
         }
 
-        private void OnVisitClicked(bool inPlace)
+        private void OnVisitClicked(bool changeWorld)
         {
-            if(!string.IsNullOrEmpty(World.RootCid))
+            if (changeWorld)
             {
-                if (inPlace)
-                    SettingsManager.EnterWorld(World.RootCid);
-                else
-                    ServerSearcher.InitiateServerTransition(World.RootCid);
-
-                World.UpdateLastSeen();
+                if (World != null) SettingsManager.EnterWorld(World.RootCid);
+                // Change World wouldn't be available at all.
             }
+            else
+            {
+                // Server will know the world assets and tell us about it when we log in.
+                ServerSearcher.InitiateServerTransition(World.RootCid);
+            }
+
+            World?.UpdateLastSeen();
         }
 
         private void OnAddClicked()
@@ -154,7 +165,7 @@ namespace Arteranos.UI
         private void OnDeleteClicked()
         {
             World.Unfavourite();
-            World = null;
+            PublicWorldData = PublicWorldData.OfflineWorld();
             PopulateWorldData();
         }
     }

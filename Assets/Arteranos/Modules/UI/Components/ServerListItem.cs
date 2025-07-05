@@ -9,6 +9,7 @@ using TMPro;
 using UnityEngine;
 
 using Arteranos.Core;
+using Arteranos.Common.Cryptography;
 
 namespace Arteranos.UI
 {
@@ -68,15 +69,21 @@ namespace Arteranos.UI
                 // Refresh data
                 si = new(PeerID);
 
+                // TODO OfflineWorld needs the pinningUsers list filled.
+                PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
+                bool isViewable = publicWorldData.WorldFP == (Fingerprint) null || publicWorldData.CanView(G.UserData);
+
                 TMP_Text btn_VisitText = btn_Visit.transform.GetChild(0).GetComponent<TMP_Text>(); ;
                 btn_VisitText.text = !si.IsOnline
                     ? "Try to\nvisit"
                     : "Visit";
                 // TODO Inactive if the world is restricted to client's user
-                btn_Visit.gameObject.SetActive(true); //  (si.IsOnline);
+                btn_Visit.gameObject.SetActive(isViewable); //  (si.IsOnline);
 
                 if (!si.IsOnline)
                     lbl_Caption.text = $"{si.Name} (Offline)";
+                else if(!isViewable)
+                    lbl_Caption.text = $"{si.Name} (Private)";
                 else
                     lbl_Caption.text =
                         $"Server: {$"{si.Name}"} (Users: {si.UserCount}, Friends: {si.FriendCount})\n" +

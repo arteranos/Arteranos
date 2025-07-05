@@ -52,11 +52,11 @@ namespace Arteranos.Core
         private WorldAccessInfoLevel GetACL(UserID user)
         {
             Fingerprint fp = new Fingerprint(user);
-            if (PinningUsers.Contains(fp)) return WorldAccessInfoLevel.Pin;
+            if (PinningUsers?.Contains(fp) ?? false) return WorldAccessInfoLevel.Pin;
 
-            if (VisitorUsers.Contains(fp)) return WorldAccessInfoLevel.View;
+            if (VisitorUsers?.Contains(fp) ?? false) return WorldAccessInfoLevel.View;
 
-            if (DeniedUsers.Contains(fp)) return WorldAccessInfoLevel.Nothing;
+            if (DeniedUsers?.Contains(fp) ?? false) return WorldAccessInfoLevel.Nothing;
 
             return DefaultAccess;
         }

@@ -153,8 +153,12 @@ namespace Arteranos.UI
             {
                 PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
 
+                // Filter out worlds which are denied to the user
+                if (!publicWorldData.CanView(G.UserData)) continue;
+
                 Fingerprint currentWorldFP = publicWorldData.WorldFP;
 
+                // Filter out servers with no worlds loaded
                 if (currentWorldFP == (Fingerprint)null) continue;
 
                 // Looking for the server where you meet up with most of your friends;

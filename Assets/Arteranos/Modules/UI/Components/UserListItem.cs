@@ -28,9 +28,9 @@ namespace Arteranos.UI
         private HoverButton btn_AddFriend = null; // Offering Friend or accepting the request
         private HoverButton btn_DelFriend = null; // Revoking Friend offer or unfriend
         private HoverButton btn_Block = null; // Block user
-        private HoverButton btn_Unblock= null; // Unblock user
-        private HoverButton btn_SendText= null; // Message user
-        private HoverButton btn_TravelTo=null; // Travel to specific user
+        private HoverButton btn_Unblock = null; // Unblock user
+        private HoverButton btn_SendText = null; // Message user
+        private HoverButton btn_TravelTo = null; // Travel to specific user
 
 
         private IAvatarBrain Me = null;
@@ -54,10 +54,10 @@ namespace Arteranos.UI
             base.Awake();
 
             btn_AddFriend = btns_ItemButton[0];
-            btn_DelFriend= btns_ItemButton[1];
-            btn_Block= btns_ItemButton[2];
-            btn_Unblock= btns_ItemButton[3];
-            btn_SendText= btns_ItemButton[4];
+            btn_DelFriend = btns_ItemButton[1];
+            btn_Block = btns_ItemButton[2];
+            btn_Unblock = btns_ItemButton[3];
+            btn_SendText = btns_ItemButton[4];
             btn_TravelTo = btns_ItemButton[5];
 
             btn_AddFriend.onClick.AddListener(GotAddFriendButtonClick);
@@ -87,14 +87,22 @@ namespace Arteranos.UI
             if (server != null && LocationVisible)
             {
                 ServerInfo si = new(server);
-                string servername = si.Name ?? "Unknown server";
-                string worldname = si.CurrentWorldName ?? "Unknown world";
-                sb.Append($"\n{servername}");
+                PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
 
-                if (worldFP != (Fingerprint) null)
+                // If the friend wants a little bit of privacy, let him.
+                if (publicWorldData.CanView(G.UserData))
                 {
-                    sb.Append($" ({worldname})");
+                    string servername = si.Name ?? "Unknown server";
+                    string worldname = si.CurrentWorldName ?? "Unknown world";
+                    sb.Append($"\n{servername}");
+
+                    if (worldFP != (Fingerprint)null)
+                    {
+                        sb.Append($" ({worldname})");
+                    }
                 }
+                else server = null;
+
             }
 
             lbl_caption.text = sb.ToString();

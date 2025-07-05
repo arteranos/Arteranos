@@ -7,7 +7,6 @@
 
 
 using Arteranos.Core;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -70,7 +69,9 @@ namespace Arteranos.UI
 
             img_Icon.Path = si.ServerIcon;
 
-            lbl_World.text = si.CurrentWorldName;
+            lbl_World.text = si.PublicWorldData?.CanView(G.UserData) ?? false
+            ? si.CurrentWorldName
+            : "(Private)";
         }
     }
 }

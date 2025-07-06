@@ -6,6 +6,7 @@
  */
 
 
+using System.Linq;
 using Arteranos.Core;
 using TMPro;
 using UnityEngine;
@@ -65,11 +66,11 @@ namespace Arteranos.UI
                 ).ToString();
             lbl_Description.text = si.Description.ToString();
 
-            lbl_AdminList.text = string.Join(", ", si.AdminNames);
+            lbl_AdminList.text = string.Join(", ", (from entry in si.AdminNames select (string) entry).ToArray());
 
             img_Icon.Path = si.ServerIcon;
 
-            lbl_World.text = si.PublicWorldData?.CanView(G.UserData) ?? false
+            lbl_World.text = si.PublicWorldData.CanView(G.UserData)
             ? si.CurrentWorldName
             : "(Private)";
         }

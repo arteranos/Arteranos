@@ -23,7 +23,7 @@ namespace Arteranos.Core
         public MultiHash PeerID { get; private set; } = null;
 
         public string CurrentWorldName => OnlineData?.PublicWorldData.Name;
-        public PublicWorldData? PublicWorldData => OnlineData?.PublicWorldData;
+        public PublicWorldData PublicWorldData => OnlineData?.PublicWorldData ?? default;
 
         private ServerInfo()
         {
@@ -64,7 +64,7 @@ namespace Arteranos.Core
         public string Description => DescriptionStruct?.Description ?? string.Empty;
         public string PrivacyTOSNotice => DescriptionStruct?.PrivacyTOSNotice;
         public Cid ServerIcon => DescriptionStruct?.ServerIcon;
-        public string[] AdminNames => DescriptionStruct?.AdminNames ?? new string[0];
+        public UserID[] AdminNames => DescriptionStruct?.AdminNames ?? new UserID[0];
         public IEnumerable<IPAddress> IPAddresses
         {
             get

@@ -42,10 +42,6 @@ namespace Arteranos.Core
 
         [ProtoMember(10)]
         public string PrivacyTOSNotice;
-        
-        [Obsolete("#208 - extend to UserID")]
-        [ProtoMember(11)]
-        public string[] AdminNames;
 
         [ProtoMember(12)]
         public string PeerID;
@@ -67,6 +63,9 @@ namespace Arteranos.Core
 
         [ProtoMember(18)]
         public string LastUsedIPAddress; // Client only: IP address to connect to this server
+        
+        [ProtoMember(19)]
+        public UserID[] AdminNames;
 
         public void Serialize(Stream stream)
             => Serializer.Serialize(stream, this);

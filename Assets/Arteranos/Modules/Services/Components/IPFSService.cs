@@ -564,9 +564,9 @@ namespace Arteranos.Services
             async Task<IFileSystemNode> CreateSDFile()
             {
                 Server server = G.Server;
-                IEnumerable<string> q = from entry in G.ServerUsers.Base
+                IEnumerable<UserID> q = from entry in G.ServerUsers.Base
                                         where UserState.IsSAdmin(entry.userState)
-                                        select ((string)entry.userID);
+                                        select entry.userID;
 
                 ServerDescription ServerDescription = new()
                 {

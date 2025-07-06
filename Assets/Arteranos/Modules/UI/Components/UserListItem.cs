@@ -87,7 +87,7 @@ namespace Arteranos.UI
             if (server != null && LocationVisible)
             {
                 ServerInfo si = new(server);
-                PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
+                PublicWorldData publicWorldData = si.PublicWorldData;
 
                 // If the friend wants a little bit of privacy, let him.
                 if (publicWorldData.CanView(G.UserData))

@@ -84,7 +84,7 @@ namespace Arteranos.Core.Operations
                     xScore = -20000;
                 else if (context.wantedWorld.Permissions != null && context.wantedWorld.Permissions.IsInViolation(x.Permissions))
                     xScore = -10000;
-                else if (x.PublicWorldData.Value.WorldFP != context.wantedWorld.WorldFP)
+                else if (x.PublicWorldData.WorldFP != context.wantedWorld.WorldFP)
                     xScore = -10000;
 
                 return xScore;

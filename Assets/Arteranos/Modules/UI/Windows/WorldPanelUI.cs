@@ -151,7 +151,7 @@ namespace Arteranos.UI
         {
             foreach(ServerInfo si in ServerInfo.Dump())
             {
-                PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
+                PublicWorldData publicWorldData = si.PublicWorldData;
 
                 // Filter out worlds which are denied to the user
                 if (!publicWorldData.CanView(G.UserData)) continue;

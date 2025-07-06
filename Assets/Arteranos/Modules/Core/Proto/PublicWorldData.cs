@@ -38,13 +38,13 @@ namespace Arteranos.Core
         public WorldAccessInfoLevel DefaultAccess;
 
         [ProtoMember(7)]
-        public List<Fingerprint> DeniedUsers;
+        public Fingerprint[] DeniedUsers;
 
         [ProtoMember(8)]
-        public List<Fingerprint> VisitorUsers;
+        public Fingerprint[] VisitorUsers;
 
         [ProtoMember(9)]
-        public List<Fingerprint> PinningUsers;
+        public Fingerprint[] PinningUsers;
 
         [ProtoMember(10)]
         public string Description;
@@ -67,6 +67,9 @@ namespace Arteranos.Core
 
         public static PublicWorldData OfflineWorld()
         {
+            IEnumerable<Fingerprint> q = from entry in G.ServerUsers.Base
+                                         where UserState.IsSAdmin(entry.userState)
+                                         select new Fingerprint(entry.userID);
             return new()
             {
                 Name = "Somewhere",
@@ -75,9 +78,9 @@ namespace Arteranos.Core
                 WorldFP = null,
                 Permissions = null,
                 DefaultAccess = WorldAccessInfoLevel.Nothing,
-                DeniedUsers = new(),
-                VisitorUsers = new(), // TODO Server admins
-                PinningUsers = new(),
+                DeniedUsers = new Fingerprint[0],
+                VisitorUsers = q.ToArray(),
+                PinningUsers = new Fingerprint[0],
                 Description = "The server is just started..."
             };
         }
@@ -142,9 +145,9 @@ namespace Arteranos.Core
                 WorldFP = new Fingerprint(world.RootCid),
                 Permissions = wi.ContentRating,
                 DefaultAccess = defaultLevel,
-                DeniedUsers = deniedUsers.ToList(),
-                VisitorUsers = visitorUsers.ToList(),
-                PinningUsers = pinningUsers.ToList(),
+                DeniedUsers = deniedUsers.ToArray(),
+                VisitorUsers = visitorUsers.ToArray(),
+                PinningUsers = pinningUsers.ToArray(),
                 Description = wi.WorldDescription
             };
         }

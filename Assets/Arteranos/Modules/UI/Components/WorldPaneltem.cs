@@ -33,7 +33,6 @@ namespace Arteranos.UI
         public int ServersCount { get; internal set; } = 0;
         public int UsersCount { get; internal set; } = 0;
         public int FriendsMax { get; internal set; } = 0;
-        public bool Hidden { get; internal set; } = false;
 
         private bool AllowedForThis = true;
         private string patternCaption = null;
@@ -68,10 +67,15 @@ namespace Arteranos.UI
         {
             IEnumerator Cor()
             {
+                // We're not supposed to be here anymore. The world creator just batten down the
+                // hatches while you're here. Maybe it's a honest error he'd fix it in a jiffy.
                 if (!PublicWorldData.CanView(G.UserData))
                 {
-                    Hidden = true;
                     lbl_Caption.text = "(not viewable)";
+                    btn_Add.gameObject.SetActive(false);
+                    btn_Delete.gameObject.SetActive(false);
+                    btn_ChangeWorld.gameObject.SetActive(false);
+                    btn_Visit.gameObject.SetActive(false);
                     yield break;
                 }
 
@@ -168,7 +172,7 @@ namespace Arteranos.UI
         private void OnDeleteClicked()
         {
             World.Unfavourite();
-            PublicWorldData = PublicWorldData.OfflineWorld();
+            PublicWorldData = default;
             PopulateWorldData();
         }
     }

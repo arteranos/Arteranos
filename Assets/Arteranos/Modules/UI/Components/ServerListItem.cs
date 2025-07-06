@@ -67,18 +67,16 @@ namespace Arteranos.UI
             void ShowOnlineDetails()
             {
                 // Refresh data
-                si = new(PeerID);
+                if(si == null) si = new(PeerID);
 
-                // TODO OfflineWorld needs the pinningUsers list filled.
-                PublicWorldData publicWorldData = si.PublicWorldData ?? PublicWorldData.OfflineWorld();
-                bool isViewable = publicWorldData.WorldFP == (Fingerprint) null || publicWorldData.CanView(G.UserData);
+                PublicWorldData publicWorldData = si.PublicWorldData;
+                bool isViewable = publicWorldData.CanView(G.UserData);
 
                 TMP_Text btn_VisitText = btn_Visit.transform.GetChild(0).GetComponent<TMP_Text>(); ;
                 btn_VisitText.text = !si.IsOnline
                     ? "Try to\nvisit"
                     : "Visit";
-                // TODO Inactive if the world is restricted to client's user
-                btn_Visit.gameObject.SetActive(isViewable); //  (si.IsOnline);
+                btn_Visit.gameObject.SetActive(isViewable);
 
                 if (!si.IsOnline)
                     lbl_Caption.text = $"{si.Name} (Offline)";
